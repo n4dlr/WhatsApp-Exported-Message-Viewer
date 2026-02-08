@@ -1,72 +1,187 @@
-WhatsApp Mesaj Oxuyucu
+📱 WhatsApp Mesaj Oxuyucu 
 
-Bu proje, ixrac edilmiş WhatsApp mesajlarını və media fayllarını rahat şəkildə oxumaq üçün hazırlanmış veb tətbiqdir. Tətbiq tam oflayn işləyir və heç bir serverə məlumat göndərmir.
+WhatsApp Mesaj Oxuyucu — WhatsApp-dan ixrac edilmiş mesajları və media fayllarını tam oflayn, təhlükəsiz və WhatsApp-a bənzər interfeys ilə oxumaq üçün hazırlanmış veb tətbiqdir.
+
+Bu tətbiq heç bir serverə qoşulmur, heç bir məlumat göndərmir və bütün emal prosesi istifadəçinin cihazında baş verir. Məxfilik burada boş söz deyil, memarlıq qərarıdır.
+
 
 ---
 
-✨ Xüsusiyyətlər
+✨ Əsas Xüsusiyyətlər
 
-· 📦 ZIP fayl yükləmə: WhatsApp ixracından çıxan .zip faylını seçin, avtomatik analiz edilsin.
-· 💬 WhatsApp stili interfeys: Mesajlar WhatsApp-da olduğu kimi görünür (sağda/solda, balonlar).
-· 🌙 Gecə/Gündüz rejimi: İstifadəçi tərəfindən seçilə bilən tema.
-· 🔍 Axtarış funksiyası: Mesajlarda söz və ya ifadə axtarın, nəticələr arasında keçid edin.
-· 👤 İstifadəçi seçimi: Hansı istifadəçinin "mənim" mesajlarım olduğunu seçin.
-· 📄 Saxlanmış fayllar: Əvvəllər yüklənmiş ZIP fayllarını siyahıdan seçin.
-· 🌍 Çoxdilli dəstək: 12 dil mövcuddur.
-· 🖋️ Yazı növü və ölçüsü: İstifadəçi tərəfindən tənzimlənə bilən fontlar.
-· 📱 Responsiv dizayn: Mobil və masaüstü cihazlarda uyğun.
-· 🔒 Məxfilik: Bütün məlumatlar yerində (localStorage) saxlanılır, heç bir məlumat göndərilmir.
+📦 ZIP fayl dəstəyi
+WhatsApp ixracından çıxan .zip faylını yükləyin, tətbiq avtomatik analiz etsin.
+
+💬 WhatsApp stili interfeys
+Mesajlar real WhatsApp görünüşündə göstərilir (sağ / sol balonlar, tarixlər, zamanlar).
+
+🌙 Gecə və Gündüz rejimi
+İstifadəçi istədiyi vaxt tema dəyişə bilər.
+
+🔍 Mesaj axtarışı
+Mesajlar arasında söz və ya ifadə üzrə axtarış edin və nəticələr arasında rahat keçid edin.
+
+👤 İstifadəçi seçimi
+Hansı mesajların “mənim mesajlarım” olduğunu seçin.
+
+📄 Saxlanmış ZIP faylları
+Əvvəllər yüklənmiş WhatsApp ixraclarını siyahıdan yenidən açın.
+
+🌍 Çoxdilli dəstək
+Tətbiq 12 fərqli dili dəstəkləyir.
+
+🖋️ Font və ölçü ayarları
+Yazı növünü və ölçüsünü öz zövqünüzə görə tənzimləyin.
+
+📱 Responsiv dizayn
+Mobil telefon, planşet və masaüstü cihazlarda problemsiz işləyir.
+
+🔒 Tam məxfilik
+Bütün məlumatlar yalnız localStorage-da saxlanılır. Server yoxdur, izləmə yoxdur.
+
+
 
 ---
 
 🚀 İstifadə Qaydası
 
-1. WhatsApp-dan mesajları ixrac edin (WhatsApp > Söhbət > Daha çox > İxrac söhbəti).
-2. Çıxan .zip faylını "ZIP fayl seç..." düyməsi ilə yükləyin.
-3. Mesajlar avtomatik olaraq WhatsApp interfeysində görünəcək.
-4. İstədiyiniz istifadəçini "İstifadəçi seç..." menyusundan seçin.
-5. Axtarış, tema, dil və font ayarlarını yuxarıdakı kontrollardan dəyişə bilərsiniz.
+1. WhatsApp-da söhbəti ixrac edin
+WhatsApp > Söhbət > Daha çox > İxrac söhbəti
+
+
+2. Alınan .zip faylını tətbiqdə “ZIP fayl seç…” düyməsi ilə yükləyin.
+
+
+3. Mesajlar avtomatik olaraq WhatsApp interfeysində göstəriləcək.
+
+
+4. “İstifadəçi seç…” menyusundan hansı mesajların sizə aid olduğunu seçin.
+
+
+5. Yuxarı paneldən:
+
+Axtarış
+
+Tema
+
+Dil
+
+Font və ölçü
+ayarlarını dəyişə bilərsiniz.
+
+
+
+
 
 ---
 
 ⚙️ Ayarlar
 
-· Dil seçimi: 12 dil dəstəklənir (Azərbaycan, İngilis, Rus, Türk, Çin, Alman, Fransız, İspan, Ərəb, Portuqal, Hind, Yapon).
-· Yazı stili: Segoe UI, Georgia, Courier New, Times New Roman.
-· Yazı ölçüsü: Kiçik, Orta, Böyük, Çox böyük.
-· Tema: Gündüz / Gecə rejimi.
+Dil dəstəyi (12 dil):
+
+Azərbaycan
+
+İngilis
+
+Rus
+
+Türk
+
+Çin
+
+Alman
+
+Fransız
+
+İspan
+
+Ərəb
+
+Portuqal
+
+Hind
+
+Yapon
+
+
+Yazı növləri:
+
+Segoe UI
+
+Georgia
+
+Courier New
+
+Times New Roman
+
+
+Yazı ölçüləri:
+
+Kiçik
+
+Orta
+
+Böyük
+
+Çox böyük
+
+
+Tema:
+
+Gündüz (Light)
+
+Gecə (Dark)
+
+
 
 ---
 
 📁 Saxlanılan Məlumatlar
 
-Tətbiq yalnız localStorage-da aşağıdakıları saxlayır:
+Tətbiq yalnız aşağıdakı məlumatları localStorage-da saxlayır:
 
-· Seçilmiş tema (light/dark)
-· Seçilmiş dil
-· Yazı növü və ölçüsü
-· Əvvəllər yüklənmiş ZIP faylları (Base64 formatında)
+Seçilmiş tema (light / dark)
 
-Heç bir məlumat serverə göndərilmir.
+Seçilmiş dil
 
----
+Yazı növü və ölçüsü
 
-🛠️ Texnologiyalar
+Əvvəllər yüklənmiş ZIP faylları (Base64 formatında)
 
-· HTML5, CSS3, JavaScript (Vanilla)
-· JSZip (ZIP fayllarını oxumaq üçün)
-· LocalStorage (qeydiyyat və seçimləri saxlamaq üçün)
-· Responsiv CSS (mobil uyğunluq)
+
+📌 Qeyd:
+Heç bir məlumat internetə göndərilmir və server tərəfi yoxdur.
+
 
 ---
 
-👨‍💻 Hazırlayan
+🛠️ İstifadə Olunan Texnologiyalar
+
+HTML5
+
+CSS3
+
+JavaScript (Vanilla)
+
+JSZip – ZIP fayllarını oxumaq üçün
+
+LocalStorage – istifadəçi seçimlərini saxlamaq üçün
+
+Responsiv CSS – mobil uyğunluq üçün
+
+
+
+---
+
+👨‍💻 Müəllif
 
 Nadir Nəcəfzadə
 📧 Email: nadirnecefzadenadirnecefzade@gmail.com
+
 
 ---
 
 📄 Lisenziya
 
-Bu layihə açıq mənbədir və istifadəsi pulsuzdur.
+Bu layihə açıq mənbəlidir və pulsuz istifadə oluna bilər.
+
