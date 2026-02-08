@@ -1,0 +1,1787 @@
+<!DOCTYPE html>  <html lang="az">  
+<head>  
+<meta charset="UTF-8" />  
+<meta name="viewport" content="width=device-width, initial-scale=1" />  
+<style>  
+  :root {  
+    --bg-light: #ece5dd;  
+    --bg-dark: #121212;  
+    --header-light: #075e54;  
+    --header-dark: #1f2c34;  
+    --mine-bg: #dcf8c6;  
+    --mine-bg-dark: #054640;  
+    --theirs-bg: #ffffff;  
+    --theirs-bg-dark: #2a3942;  
+    --text-light: #000;  
+    --text-dark: #fff;  
+    --time-color: rgba(0,0,0,0.45);  
+    --time-color-dark: rgba(255,255,255,0.45);  
+    --search-bg: #f0f0f0;  
+    --search-bg-dark: #303030;  
+    --border-radius: 20px;  
+    --highlight: yellow;  
+    --btn-bg: #075e54;  
+    --btn-hover-bg: #0e7d66;  
+  }  
+  body {  
+    margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;  
+    background: var(--bg-light); color: var(--text-light);  
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;  
+    transition: background 0.5s, color 0.5s;  
+  }  
+  body.dark {  
+    background: var(--bg-dark); color: var(--text-dark);  
+  }  
+  header {  
+    background: var(--header-light); color: white;  
+    padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;  
+    font-weight: 600; font-size: 18px; user-select: none;  
+  }  
+  body.dark header {  
+    background: var(--header-dark);  
+  }  
+  #activeStatus {  
+    font-size: 12px; opacity: 0.7;  
+  }  
+  #modeToggle {  
+    background: none; border: none; color: white; font-size: 22px; cursor: pointer;  
+    user-select: none; padding: 0; margin-left: 10px;  
+    transition: transform 0.6s ease;  
+  }  
+  #modeToggle.sun {  
+    transform: rotate(360deg);  
+  }  
+  /* Ayarlar düyməsi */  
+  #settingsBtn {  
+    background: none;  
+    border: none;  
+    font-size: 22px;  
+    margin-left: 8px;  
+    color: white;  
+    cursor: pointer;  
+    transition: color 0.3s ease;  
+    user-select: none;  
+  }  
+  #settingsBtn:hover {  
+    color: #4caf50;  
+  }  .controls {
+padding: 10px 15px;
+background: var(--bg-light);
+border-bottom: 1px solid #ccc;
+display: flex;
+gap: 10px;
+align-items: center;
+overflow: hidden;
+flex-wrap: wrap;
+}
+body.dark .controls {
+background: var(--bg-dark);
+border-color: #444;
+}
+
+/* Gizli file input üçün label */
+input[type="file"] {
+display: none;
+}
+label.fileLabel {
+flex: 1 1 150px;
+max-width: 150px;
+padding: 10px 15px;
+background: var(--btn-bg);
+color: white;
+font-weight: 600;
+font-size: 14px;
+border-radius: var(--border-radius);
+text-align: center;
+cursor: pointer;
+user-select: none;
+transition: background 0.3s ease;
+box-sizing: border-box;
+}
+label.fileLabel:hover {
+background: var(--btn-hover-bg);
+}
+body.dark label.fileLabel {
+background: var(--header-dark);
+}
+body.dark label.fileLabel:hover {
+background: #265058;
+}
+
+input#search {
+flex: 3 1 200px;
+max-width: 100%;
+padding: 8px 15px;
+border-radius: var(--border-radius);
+border: 1px solid #ccc;
+background: var(--search-bg);
+color: var(--text-light);
+font-size: 14px;
+box-sizing: border-box;
+box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+}
+input#search:focus {
+outline: none;
+box-shadow: 0 0 8px 2px #4CAF50;
+}
+body.dark input#search {
+background: var(--search-bg-dark);
+border-color: #555;
+color: var(--text-dark);
+}
+.custom-dropdown {
+  background-color: #075e54 !important; /* Yaşıl fon */
+  color: white !important;              /* Ağ yazı */
+  border: 2px solid #0e7d66 !important; /* Tünd yaşıl sərhəd */
+  padding: 10px 12px;
+  border-radius: 6px;
+  width: 240px;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+  transition: none; /* Heç bir dəyişmə animasiyası olmasın */
+}
+
+/* Hover zamanı da rəng dəyişməsin */
+.custom-dropdown:hover {
+  background-color: #0e7d66 !important;
+}
+
+/* Açılan menyu */
+.dropdown-options {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #0e7d66;
+  border: 1px solid #1e7e34;
+  border-top: none;
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+  border-radius: 0 0 6px 6px;
+}
+
+
+
+
+/* Hover zamanı da sabit yaşıl rəng */
+.dropdown-options div:hover {
+  background-color: #0e7d66;
+}
+.search-navigation {
+padding: 8px 15px;
+background: var(--bg-light);
+border-bottom: 1px solid #ccc;
+display: flex;
+justify-content: flex-end;
+gap: 10px;
+}
+body.dark .search-navigation {
+background: var(--bg-dark);
+border-color: #444;
+}
+button#prevBtn, button#nextBtn {
+background: var(--btn-bg);
+border: none;
+color: white;
+padding: 8px 16px;
+border-radius: var(--border-radius);
+font-weight: 600;
+cursor: pointer;
+transition: background 0.3s;
+}
+/* Ümumi font bədənə tətbiq olunur */
+body {
+  font-family: 'Arial', sans-serif !important;
+}
+/* ZIP dropdown tam açılan və scroll ilə */
+#zipDropdown {
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 1000;
+}
+
+#zipDropdown .dropdown-options {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 250px; /* Scroll üçün limit */
+  overflow-y: auto;
+  background-color: #0e7d66;
+  border: 1px solid #1e7e34;
+  border-radius: 0 0 6px 6px;
+  z-index: 1001;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+#zipDropdown.open .dropdown-options {
+  display: block;
+}
+
+/* Scrollbar Chrome üçün */
+#zipDropdown .dropdown-options::-webkit-scrollbar {
+  width: 6px;
+}
+
+#zipDropdown .dropdown-options::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+/* Bütün elementlərdə font məcburi tətbiq olunur */
+select, input, button {
+  font-family: inherit !important;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  background: #075e54;
+  color: white;
+  cursor: pointer;
+}
+
+/* Fokus zamanı vizual effekt */
+select:focus, input:focus, button:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 4px rgba(76, 175, 80, 0.5);
+}
+/* Gündüz modunda bütün .custom-dropdown butonları */
+.custom-dropdown {
+  background-color: #28a745; /* Yaşıl fon */
+  color: white;
+  border: 1px solid #1e7e34;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Gecə (dark mode) üçün .custom-dropdown */
+body.dark .custom-dropdown {
+  background: #2a3942 !important;
+  border-color: #555 !important;
+  color: #eee !important;
+}
+
+/* Gecə modunda içindəki span yazısı */
+body.dark .custom-dropdown span {
+  color: #eee !important;
+}
+
+/* Açılan menyular üçün */
+.custom-dropdown .dropdown-options {
+  display: none;
+  position: absolute;
+  background-color: white;
+  color: black;
+  min-width: 160px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+  border-radius: 6px;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Açılan menyuların div-ləri */
+.custom-dropdown .dropdown-options div {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Hover effekti */
+.custom-dropdown .dropdown-options div:hover {
+  background-color: #ddd;
+}
+
+/* Dark modda açılan menyu və yazılar */
+body.dark .custom-dropdown .dropdown-options {
+  background: #2a3942 !important;
+  color: #eee !important;
+}
+
+body.dark .custom-dropdown .dropdown-options div {
+  color: #eee !important;
+}
+
+body.dark .custom-dropdown .dropdown-options div:hover {
+  background-color: #3a4a52 !important;
+  color: #fff !important;
+}
+/* Dark mode üçün */
+body.dark select,
+body.dark input,
+body.dark button {
+  background: #2a3942;
+  border-color: #555;
+  color: #eee;
+}
+button#prevBtn:disabled, button#nextBtn:disabled {
+background: #999;
+cursor: default;
+}
+button#prevBtn:hover:not(:disabled), button#nextBtn:hover:not(:disabled) {
+background: var(--btn-hover-bg);
+}
+body.dark button#prevBtn, body.dark button#nextBtn {
+background: var(--header-dark);
+}
+body.dark button#prevBtn:hover:not(:disabled), body.dark button#nextBtn:hover:not(:disabled) {
+background: #265058;
+}
+#messages {
+flex: 1;
+overflow-y: auto;
+padding: 15px 12px 20px;
+background: var(--bg-light);
+display: flex;
+flex-direction: column;
+scroll-behavior: smooth;
+-webkit-overflow-scrolling: touch;
+}
+body.dark #messages {
+background: var(--bg-dark);
+}
+.message {
+max-width: 75%;
+padding: 10px 14px;
+margin-bottom: 8px;
+border-radius: var(--border-radius);
+font-size: 14px;
+word-wrap: break-word;
+line-height: 1.3;
+user-select: text;
+}
+.message.mine {
+align-self: flex-start;
+background: var(--theirs-bg);
+color: var(--text-light);
+border-bottom-left-radius: 0;
+text-align: left;
+direction: ltr;
+}
+body.dark .message.mine {
+background: var(--theirs-bg-dark);
+color: var(--text-dark);
+}
+.message.theirs {
+align-self: flex-end;
+background: var(--mine-bg);
+color: var(--text-light);
+border-bottom-right-radius: 0;
+text-align: left;
+direction: ltr;
+}
+body.dark .message.theirs {
+background: var(--mine-bg-dark);
+color: var(--text-dark);
+}
+.sender {
+font-weight: 600;
+font-size: 12px;
+margin-bottom: 4px;
+opacity: 0.75;
+user-select: none;
+text-align: left;
+}
+.time {
+font-size: 10px;
+color: var(--time-color);
+opacity: 0.8;
+margin-top: 4px;
+text-align: right;
+user-select: none;
+}
+body.dark .time {
+color: var(--time-color-dark);
+}
+.message img, .message video {
+max-width: 200px;
+max-height: 200px;
+margin-top: 8px;
+border-radius: 14px;
+display: block;
+}
+.message audio {
+margin-top: 8px;
+width: 180px;
+outline: none;
+display: block;
+border-radius: 14px;
+background: transparent;
+}
+.highlight {
+background: var(--highlight);
+color: black;
+}
+body.dark .highlight {
+background: rgba(255, 255, 0, 0.4);
+color: black;
+}
+@media (max-width: 480px) {
+#messages {
+padding: 12px 8px 16px;
+}
+.message {
+max-width: 85%;
+font-size: 15px;
+}
+.message img, .message video {
+max-width: 160px;
+max-height: 160px;
+}
+.message audio {
+width: 140px;
+}
+}
+/* Yalnız #senderDropdown və #zipDropdown açılan menyularındakı seçimlərin fon və yazı rəngi */
+#senderDropdown .dropdown-options div,
+#zipDropdown .dropdown-options div {
+  background-color: white !important; /* Açılan menyu fonu ağ */
+  color: black !important;             /* Yazılar qara */
+}
+
+/* Hover zamanı fon və rəng */
+#senderDropdown .dropdown-options div:hover,
+#zipDropdown .dropdown-options div:hover {
+  background-color: #ddd !important;
+  color: black !important;
+}
+
+/* Dark modda #senderDropdown və #zipDropdown açılan menyu seçimlərinin fon və yazı rəngi */
+body.dark #senderDropdown .dropdown-options div,
+body.dark #zipDropdown .dropdown-options div {
+  background-color: #2a3942 !important; /* Tünd fon */
+  color: #eee !important;               /* Açıq yazı */
+}
+
+/* Dark modda hover zamanı fon və yazı rəngi */
+body.dark #senderDropdown .dropdown-options div:hover,
+body.dark #zipDropdown .dropdown-options div:hover {
+  background-color: #1e2a37 !important; /* Daha tünd fon */
+  color: #fff !important;                /* Ağ yazı */
+}
+/* Dropdownun yerləşdiyi konteynerlərdə overflow visible olsun */
+#senderDropdown, #zipDropdown {
+  position: relative !important;
+  z-index: 1000 !important;
+  overflow: visible !important;
+}
+
+/* Əgər varsa, dropdownun valideyn konteynerinə də əlavə et */
+/* Məsələn: */
+.dropdown-parent-container {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 1;
+}
+/* Ayarlar modal stili */
+#settingsModal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 24px 32px;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  z-index: 1000;
+  max-width: 350px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: left;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #222;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body.dark #settingsModal {
+  background: #1f2c34;
+  color: #ddd;
+}
+
+#settingsOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+#settingsModal h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight: bold;
+  color: inherit;
+}
+
+#settingsModal select {
+  margin-top: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: 1px solid #bbb;
+  width: 100%;
+  box-sizing: border-box;
+  background: #f9f9f9;
+  color: #222;
+}
+
+body.dark #settingsModal select {
+  background: #2a3942;
+  border-color: #555;
+  color: #eee;
+}
+
+#settingsModal button {
+  margin-top: 28px;
+  padding: 10px 24px;
+  background: var(--btn-bg, #007bff);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.3s ease;
+  width: 100%;
+}
+
+
+#settingsModal button:hover {
+  background: var(--btn-hover-bg, #0056b3);
+}
+.custom-dropdown {
+  position: relative;
+  background: #f9f9f9;
+  color: #222;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #bbb;
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+.custom-dropdown:focus {
+  outline: none;
+  box-shadow: 0 0 4px #4caf50;
+}
+
+.dropdown-options {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  color: #222;
+  border: 1px solid #bbb;
+  border-radius: 0 0 10px 10px;
+  width: 100%;
+  z-index: 999;
+  max-height: 200px;
+  overflow-y: auto;
+}
+#zipDropdown {
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 1000;
+}
+
+#zipDropdown.open .dropdown-options {
+  display: block !important;
+}
+
+#zipDropdown .dropdown-options {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 240px; /* Scroll üçün hündürlük */
+  overflow-y: auto;
+  background-color: #0e7d66;
+  border: 1px solid #1e7e34;
+  border-radius: 0 0 6px 6px;
+  z-index: 1001;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  scrollbar-width: thin;
+  scrollbar-color: #ccc #0e7d66;
+}
+
+#zipDropdown .dropdown-options::-webkit-scrollbar {
+  width: 6px;
+}
+
+#zipDropdown .dropdown-options::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.form-container,
+.controls {
+  overflow: visible !important;
+  position: relative;
+  z-index: 2;
+}
+
+.dropdown-options div {
+  padding: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdown-options div:hover {
+  background: #e0e0e0;
+}
+
+.custom-dropdown.open .dropdown-options {
+  display: block;
+}
+
+/* Dark mode üçün */
+body.dark .custom-dropdown {
+  background: #2a3942;
+  color: #eee;
+  border-color: #555;
+}
+
+body.dark .dropdown-options {
+  background: #1f2c34;
+  color: #eee;
+  border-color: #444;
+}
+
+body.dark .dropdown-options div:hover {
+  background: #3b4a51
+</style>
+
+</head>  
+<body>  <header>  
+  <div>  
+    WhatsApp Oxuyucu  
+    <div id="activeStatus">Onlayn deyil</div>  
+  </div>  
+  <div>  
+    <button id="modeToggle" onclick="toggleDarkMode()" aria-label="Gecə/gündüz rejimi">🌙</button>  
+    <button id="settingsBtn" title="Ayarlar" aria-label="Ayarlar" onclick="openSettings()">⚙️</button>  
+  </div>  
+</header>  <div class="controls">  
+
+<div class="form-container">
+  <!-- Gizli fayl input -->  
+  <input type="file" id="fileInput" accept=".zip" onchange="handleZipUpload(event)" />  
+
+  <!-- Stil üçün label -->  
+  <label for="fileInput" id="fileLabel" class="fileLabel" tabindex="0">ZIP fayl seç...</label>  
+
+<!-- İSTİFADƏÇİ Custom Dropdown -->
+<select id="senderSelect" onchange="markAsMine()" style="display:none;">
+  <option value="">İstifadəçi seç...</option>
+</select>
+
+<div class="custom-dropdown" id="senderDropdown" tabindex="0" onclick="toggleSenderDropdown()">
+  <span id="selectedSenderText">İstifadəçi seç...</span>
+  <div class="dropdown-options" id="senderDropdownOptions">
+    <!-- JavaScript ilə doldurulacaq -->
+  </div>
+</div>
+
+<!-- ZIP FAYLLARI Custom Dropdown -->
+<select id="savedZipsDropdown" onchange="loadSavedZip(this.value)" style="display:none;">
+  <option value="">Əvvəlki ZIP faylları...</option>
+</select>
+
+<div class="custom-dropdown" id="zipDropdown" tabindex="0" onclick="toggleZipDropdown()">
+  <span id="selectedZipText">Əvvəlki ZIP faylları...</span>
+  <div class="dropdown-options" id="zipDropdownOptions">
+    <!-- JavaScript ilə doldurulacaq -->
+  </div>
+</div>
+</div>
+
+<style>
+  .form-container {
+    display: flex;        /* Yan-yana düzülüş */
+    align-items: center;  /* Şaquli ortalayır */
+    gap: 10px;
+    width: 100%;
+  }
+
+  #savedZipsDropdown {
+    margin-left: auto;    /* ən sağda */
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    background: #075e54;
+    color: white;
+    min-width: 160px;
+  }
+</style> <input type="text" id="search" placeholder="Mesaj axtar..." oninput="onSearchInput()" autocomplete="off" aria-label="Mesaj axtar"/>  
+</div>  <div class="search-navigation">  
+  <button id="prevBtn" onclick="prevHighlight()" disabled aria-label="Əvvəlki axtarış nəticəsi">Əvvəlki</button>  
+  <button id="nextBtn" onclick="nextHighlight()" disabled aria-label="Növbəti axtarış nəticəsi">Növbəti</button>  
+</div>  <div id="messages"></div>  <!-- Ayarlar Modalı -->  <div id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">  
+  <h3 id="settingsTitle">Ayarlar ⚙️</h3>  
+  <p id="infoText"><strong>Info:</strong> Bu tətbiq ixrac olunmuş WhatsApp mesajlarını və media fayllarını rahat oxumaq üçün nəzərdə tutulub. Mesajlar və media WhatsApp üslubunda göstərilir, əlavə funksiyalarla istifadəsi asandır.
+</p>  
+  <p id="authorText"><strong>Hazırlayan:</strong> Nadir Nəcəfzadə</p>  
+  <p id="contactText"><strong>Əlaqə Gmail:</strong> nadirnecefzadenadirnecefzade@gmail.com</p>    <hr>  
+
+<label for="langDropdown" id="langLabel"><strong>Dil seç:</strong></label><br />
+<div class="custom-dropdown" id="langDropdown" tabindex="0" onclick="toggleLangDropdown()">
+  <span id="selectedLangText">Azərbaycan dili</span>
+  <div class="dropdown-options" id="langDropdownOptions">
+    <div onclick="selectLang('az')">Azərbaycan dili</div>
+    <div onclick="selectLang('en')">English</div>
+    <div onclick="selectLang('ru')">Русский</div>
+    <div onclick="selectLang('tr')">Türkçe</div>
+    <div onclick="selectLang('zh')">中文</div>
+    <div onclick="selectLang('de')">Deutsch</div>
+    <div onclick="selectLang('fr')">Français</div>
+    <div onclick="selectLang('es')">Español</div>
+    <div onclick="selectLang('ar')">العربية</div>
+    <div onclick="selectLang('pt')">Português</div>
+    <div onclick="selectLang('hi')">हिन्दी</div>
+    <div onclick="selectLang('ja')">日本語</div>
+  </div>
+</div>
+<label for="fontDropdown" id="fontLabel"><strong>Yazı stili:</strong></label>
+<div class="custom-dropdown" id="fontDropdown" tabindex="0" onclick="toggleDropdown()">
+  <span id="selectedFont">Segoe UI</span>
+  <div class="dropdown-options" id="dropdownOptions">
+    <div onclick="selectFont('Segoe UI')">Segoe UI</div>
+    <div onclick="selectFont('Georgia')">Georgia</div>
+    <div onclick="selectFont('Courier New')">Courier New</div>
+    <div onclick="selectFont('Times New Roman')">Times New Roman</div>
+  </div>
+</div>
+
+<label for="fontSizeDropdown" id="fontSizeLabel"><strong>Yazı ölçüsü:</strong></label>
+<div class="custom-dropdown" id="fontSizeDropdown" tabindex="0" onclick="toggleFontSizeDropdown()">
+  <span id="selectedFontSizeText">Orta</span>
+  <div class="dropdown-options" id="fontSizeDropdownOptions">
+    <div onclick="selectFontSize('small')">Kiçik</div>
+    <div onclick="selectFontSize('medium')">Orta</div>
+    <div onclick="selectFontSize('large')">Böyük</div>
+    <div onclick="selectFontSize('xlarge')">Çox böyük</div>
+  </div>
+</div>
+</select>
+  <button id="closeBtn" onclick="closeSettings()">Bağla</button>
+</div>  
+<div id="settingsOverlay" onclick="closeSettings()"></div>  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>  <script>  
+  let allMessages = [];  
+  let displayedCount = 100; // ilk yüklənəcək mesaj sayı
+  let highlights = [];  
+  let currentHighlightIndex = -1;  
+  
+  function toggleDarkMode() {
+  const btn = document.getElementById("modeToggle");
+  const isDark = document.body.classList.contains("dark");
+  
+  if (isDark) {
+    btn.classList.remove("sun");
+    document.body.classList.remove("dark");
+    btn.textContent = "🌙";
+    localStorage.setItem("wa_reader_theme", "light"); // yadda saxla
+  } else {
+    btn.classList.add("sun");
+    document.body.classList.add("dark");
+    btn.textContent = "☀️";
+    localStorage.setItem("wa_reader_theme", "dark"); // yadda saxla
+  }
+}
+
+// Səhifə yüklənəndə əvvəlki vəziyyəti tətbiq et
+document.addEventListener("DOMContentLoaded", () => {
+  const savedTheme = localStorage.getItem("wa_reader_theme");
+  const btn = document.getElementById("modeToggle");
+  
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+    btn.classList.add("sun");
+    btn.textContent = "☀️";
+  } else {
+    document.body.classList.remove("dark");
+    btn.classList.remove("sun");
+    btn.textContent = "🌙";
+  }
+});
+  
+  function openSettings() {  
+    document.getElementById("settingsModal").style.display = "block";  
+    document.getElementById("settingsOverlay").style.display = "block";  
+  }  
+  function closeSettings() {  
+    document.getElementById("settingsModal").style.display = "none";  
+    document.getElementById("settingsOverlay").style.display = "none";  
+  }  
+  
+  const text = {
+  az: {
+    settingsTitle: "Ayarlar ⚙️",
+    infoText: "Bu tətbiq ixrac olunmuş WhatsApp mesajlarını və media fayllarını rahat oxumaq üçün nəzərdə tutulub. Mesajlar və media WhatsApp üslubunda göstərilir, əlavə funksiyalarla istifadəsi asandır.",
+    authorText: "Hazırlayan: Nadir Nəcəfzadə",
+    contactText: "Əlaqə Gmail: nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "Dil seç:",
+    closeBtn: "Bağla",
+    fileLabel: "ZIP fayl seç...",
+    searchPlaceholder: "Mesaj axtar...",
+    prevBtn: "Əvvəlki",
+    nextBtn: "Növbəti",
+    selectUserPlaceholder: "İstifadəçi seç...",
+    selectZipPlaceholder: "Əvvəlki ZIP faylları...",
+    fontLabel: "Yazı stili:",
+    fontSizeLabel: "Yazı ölçüsü:",
+    fontSizeOptions: {
+      small: "Kiçik",
+      medium: "Orta",
+      large: "Böyük",
+      xlarge: "Çox böyük"
+    }
+  },
+  en: {
+    settingsTitle: "Settings ⚙️",
+    infoText: "This application is designed to make it easier to read exported WhatsApp messages and media files. Messages and media are shown in WhatsApp style, easy to use with additional features.",
+    authorText: "Author: Nadir Nəcəfzadə",
+    contactText: "Contact Gmail: nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "Select language:",
+    closeBtn: "Close",
+    fileLabel: "Select ZIP file...",
+    selectZipPlaceholder: "Previous ZIP files...",
+    searchPlaceholder: "Search messages...",
+    prevBtn: "Previous",
+    nextBtn: "Next",
+    selectUserPlaceholder: "Select user...",
+    fontLabel: "Font style:",
+    fontSizeLabel: "Font size:",
+    fontSizeOptions: {
+      small: "Small",
+      medium: "Medium",
+      large: "Large",
+      xlarge: "Extra large"
+    }
+  },
+  ru: {
+    settingsTitle: "Настройки ⚙️",
+    infoText: "Это приложение разработано для того, чтобы облегчить чтение экспортированных сообщений WhatsApp и медиафайлов. Сообщения и медиафайлы отображаются в стиле WhatsApp, удобны в использовании с дополнительными функциями.",
+    authorText: "Автор: Надир Наджефзаде",
+    contactText: "Контакт Gmail: nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "Выберите язык:",
+    closeBtn: "Закрыть",
+    fileLabel: "Выберите ZIP файл...",
+    searchPlaceholder: "Поиск сообщений...",
+    prevBtn: "Предыдущий",
+    nextBtn: "Следующий",
+    selectUserPlaceholder: "Выберите пользователя...",
+    selectZipPlaceholder: "Предыдущие ZIP-файлы...",
+    fontLabel: "Стиль шрифта:",
+    fontSizeLabel: "Размер шрифта:",
+    fontSizeOptions: {
+      small: "Маленький",
+      medium: "Средний",
+      large: "Большой",
+      xlarge: "Очень большой"
+    }
+  },
+  tr: {
+    settingsTitle: "Ayarlar ⚙️",
+    infoText: "Bu uygulama, dışa aktarılan WhatsApp mesajlarını ve medya dosyalarını kolayca okumak için tasarlanmıştır. Mesajlar ve medya WhatsApp stilinde gösterilir, ek özelliklerle kullanımı kolaydır.",
+    authorText: "Hazırlayan: Nadir Nəcəfzadə",
+    contactText: "İletişim Gmail: nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "Dil seçin:",
+    closeBtn: "Kapat",
+    fileLabel: "ZIP dosyası seç...",
+    searchPlaceholder: "Mesaj ara...",
+    prevBtn: "Önceki",
+    nextBtn: "Sonraki",
+    selectUserPlaceholder: "Kullanıcı seç...",
+    selectZipPlaceholder: "Önceki ZIP dosyaları...",
+    fontLabel: "Yazı stili:",
+    fontSizeLabel: "Yazı boyutu:",
+    fontSizeOptions: {
+      small: "Küçük",
+      medium: "Orta",
+      large: "Büyük",
+      xlarge: "Çok büyük"
+    }
+  },
+  zh: {
+    settingsTitle: "设置 ⚙️",
+    infoText: "该应用旨在更轻松地阅读导出的 WhatsApp 消息和媒体文件。消息和媒体以 WhatsApp 样式显示，附加功能使用方便。",
+    authorText: "作者：Nadir Nəcəfzadə",
+    contactText: "联系邮箱：nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "选择语言：",
+    closeBtn: "关闭",
+    fileLabel: "选择 ZIP 文件...",
+    searchPlaceholder: "搜索消息...",
+    prevBtn: "上一个",
+    nextBtn: "下一个",
+    selectUserPlaceholder: "选择用户...",
+    selectZipPlaceholder: "以前的 ZIP 文件...",
+    fontLabel: "字体样式：",
+    fontSizeLabel: "字体大小：",
+    fontSizeOptions: {
+      small: "小",
+      medium: "中",
+      large: "大",
+      xlarge: "超大"
+    }
+  },
+  de: {
+    settingsTitle: "Einstellungen ⚙️",
+    infoText: "Diese Anwendung wurde entwickelt, um exportierte WhatsApp-Nachrichten und Mediendateien leichter lesbar zu machen. Nachrichten und Medien werden im WhatsApp-Stil angezeigt, mit zusätzlichen Funktionen leicht zu bedienen.",
+    authorText: "Autor: Nadir Nəcəfzadə",
+    contactText: "Kontakt Gmail: nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "Sprache wählen:",
+    closeBtn: "Schließen",
+    fileLabel: "ZIP-Datei auswählen...",
+    searchPlaceholder: "Nachrichten suchen...",
+    prevBtn: "Zurück",
+    nextBtn: "Weiter",
+    selectUserPlaceholder: "Benutzer wählen...",
+    selectZipPlaceholder: "Frühere ZIP-Dateien...",
+    fontLabel: "Schriftstil:",
+    fontSizeLabel: "Schriftgröße:",
+    fontSizeOptions: {
+      small: "Klein",
+      medium: "Mittel",
+      large: "Groß",
+      xlarge: "Sehr groß"
+    }
+  },
+  fr: {
+    settingsTitle: "Paramètres ⚙️",
+    infoText: "Cette application est conçue pour faciliter la lecture des messages et fichiers multimédias WhatsApp exportés. Les messages et les médias sont affichés dans le style WhatsApp, avec des fonctionnalités supplémentaires faciles à utiliser.",
+    authorText: "Auteur : Nadir Nəcəfzadə",
+    contactText: "Gmail de contact : nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "Choisir la langue :",
+    closeBtn: "Fermer",
+    fileLabel: "Sélectionner le fichier ZIP...",
+    searchPlaceholder: "Rechercher dans les messages...",
+    prevBtn: "Précédent",
+    nextBtn: "Suivant",
+    selectUserPlaceholder: "Choisir un utilisateur...",
+    selectZipPlaceholder: "Fichiers ZIP précédents...",
+    fontLabel: "Style de police :",
+    fontSizeLabel: "Taille de la police :",
+    fontSizeOptions: {
+      small: "Petit",
+      medium: "Moyen",
+      large: "Grand",
+      xlarge: "Très grand"
+    }
+  },
+  es: {
+    settingsTitle: "Configuración ⚙️",
+    infoText: "Esta aplicación está diseñada para facilitar la lectura de mensajes exportados de WhatsApp y archivos multimedia. Los mensajes y medios se muestran con el estilo de WhatsApp, fácil de usar con funciones adicionales.",
+    authorText: "Autor: Nadir Nəcəfzadə",
+    contactText: "Contacto Gmail: nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "Seleccionar idioma:",
+    closeBtn: "Cerrar",
+    fileLabel: "Seleccionar archivo ZIP...",
+    searchPlaceholder: "Buscar mensajes...",
+    prevBtn: "Anterior",
+    nextBtn: "Siguiente",
+    selectUserPlaceholder: "Seleccionar usuario...",
+    selectZipPlaceholder: "Archivos ZIP anteriores...",
+    fontLabel: "Estilo de fuente:",
+    fontSizeLabel: "Tamaño de fuente:",
+    fontSizeOptions: {
+      small: "Pequeño",
+      medium: "Mediano",
+      large: "Grande",
+      xlarge: "Extra grande"
+    }
+  },
+  ar: {
+    settingsTitle: "الإعدادات ⚙️",
+    infoText: "تم تصميم هذا التطبيق لتسهيل قراءة رسائل وملفات الوسائط المُصدّرة من واتساب. تُعرض الرسائل والوسائط بأسلوب واتساب، سهل الاستخدام مع ميزات إضافية.",
+    authorText: "المؤلف: Nadir Nəcəfzadə",
+    contactText: "البريد الإلكتروني للتواصل: nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "اختر اللغة:",
+    closeBtn: "إغلاق",
+    fileLabel: "اختر ملف ZIP...",
+    searchPlaceholder: "ابحث في الرسائل...",
+    prevBtn: "السابق",
+    nextBtn: "التالي",
+    selectUserPlaceholder: "اختر المستخدم...",
+    selectZipPlaceholder: "ملفات ZIP السابقة...",
+    fontLabel: "نمط الخط:",
+    fontSizeLabel: "حجم الخط:",
+    fontSizeOptions: {
+      small: "صغير",
+      medium: "متوسط",
+      large: "كبير",
+      xlarge: "كبير جداً"
+    }
+  },
+  pt: {
+    settingsTitle: "Configurações ⚙️",
+    infoText: "Este aplicativo foi projetado para facilitar a leitura de mensagens exportadas do WhatsApp e arquivos de mídia. As mensagens e mídias são exibidas no estilo WhatsApp, fáceis de usar com recursos adicionais.",
+    authorText: "Autor: Nadir Nəcəfzadə",
+    contactText: "Contato Gmail: nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "Selecionar idioma:",
+    closeBtn: "Fechar",
+    fileLabel: "Selecionar arquivo ZIP...",
+    searchPlaceholder: "Buscar mensagens...",
+    prevBtn: "Anterior",
+    nextBtn: "Próximo",
+    selectUserPlaceholder: "Selecionar usuário...",
+    selectZipPlaceholder: "Arquivos ZIP anteriores...",
+    fontLabel: "Estilo da fonte:",
+    fontSizeLabel: "Tamanho da fonte:",
+    fontSizeOptions: {
+      small: "Pequeno",
+      medium: "Médio",
+      large: "Grande",
+      xlarge: "Extra grande"
+    }
+  },
+  hi: {
+    settingsTitle: "सेटिंग्स ⚙️",
+    infoText: "यह एप्लिकेशन व्हाट्सएप से निर्यात किए गए संदेशों और मीडिया फ़ाइलों को पढ़ना आसान बनाने के लिए डिज़ाइन किया गया है। संदेश और मीडिया व्हाट्सएप शैली में दिखाए जाते हैं, अतिरिक्त सुविधाओं के साथ उपयोग में आसान।",
+    authorText: "लेखक: Nadir Nəcəfzadə",
+    contactText: "संपर्क Gmail: nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "भाषा चुनें:",
+    closeBtn: "बंद करें",
+    fileLabel: "ZIP फ़ाइल चुनें...",
+    searchPlaceholder: "संदेश खोजें...",
+    prevBtn: "पिछला",
+    nextBtn: "अगला",
+    selectUserPlaceholder: "उपयोगकर्ता चुनें...",
+    selectZipPlaceholder: "पिछली ZIP फ़ाइलें...",
+    fontLabel: "फ़ॉन्ट शैली:",
+    fontSizeLabel: "फ़ॉन्ट आकार:",
+    fontSizeOptions: {
+      small: "छोटा",
+      medium: "मध्यम",
+      large: "बड़ा",
+      xlarge: "अतिरिक्त बड़ा"
+    }
+  },
+  ja: {
+    settingsTitle: "設定 ⚙️",
+    infoText: "このアプリケーションは、エクスポートされたWhatsAppメッセージとメディアファイルを読みやすくするために設計されています。メッセージとメディアはWhatsAppスタイルで表示され、追加機能付きで使いやすいです。",
+    authorText: "作成者: Nadir Nəcəfzadə",
+    contactText: "連絡先 Gmail: nadirnecefzadenadirnecefzade@gmail.com",
+    langLabel: "言語を選択:",
+    closeBtn: "閉じる",
+    fileLabel: "ZIPファイルを選択...",
+    searchPlaceholder: "メッセージを検索...",
+    prevBtn: "前へ",
+    nextBtn: "次へ",
+    selectUserPlaceholder: "ユーザーを選択...",
+    selectZipPlaceholder: "以前の ZIP ファイル...",
+    fontLabel: "フォントスタイル:",
+    fontSizeLabel: "フォントサイズ:",
+    fontSizeOptions: {
+      small: "小",
+      medium: "中",
+      large: "大",
+      xlarge: "特大"
+    }
+  }
+};
+function changeLanguage() {
+const lang = document.getElementById("langSelect").value;
+const t = text[lang] || text.az;
+
+document.getElementById("settingsTitle").textContent = t.settingsTitle;
+document.getElementById("infoText").innerHTML = "<strong>Info:</strong> " + t.infoText;
+document.getElementById("authorText").textContent = t.authorText;
+document.getElementById("contactText").textContent = t.contactText;
+document.getElementById("langLabel").textContent = t.langLabel;
+document.getElementById("closeBtn").textContent = t.closeBtn;
+document.getElementById("fileLabel").textContent = t.fileLabel;
+document.getElementById("search").placeholder = t.searchPlaceholder;
+document.getElementById("prevBtn").textContent = t.prevBtn;
+document.getElementById("nextBtn").textContent = t.nextBtn;
+
+// Burada əlavə edirik:
+const senderSelect = document.getElementById("senderSelect");
+if (senderSelect && senderSelect.options.length > 0) {
+senderSelect.options[0].text = t.selectUserPlaceholder;
+}
+}
+
+
+// ZIP fayl yükləmə funksiyası  
+  async function handleZipUpload(event) {  
+    const file = event.target.files[0];  
+    if (!file) return;  
+  
+    resetSearch();  
+  
+    try {  
+      const zip = await JSZip.loadAsync(file);  
+      let textContent = "";  
+      const mediaFiles = {};  
+  
+      for (const [filename, zipEntry] of Object.entries(zip.files)) {  
+        if (filename.endsWith(".txt") && !textContent) {  
+          textContent = await zipEntry.async("string");  
+        } else {  
+          const blob = await zipEntry.async("blob");  
+     mediaFiles[filename.split("/").pop()] = zipEntry; // blob yaradılmır
+     
+        } 
+      } 
+  // ZIP faylı Base64 formatda yadda saxla
+const reader = new FileReader();
+reader.onload = () => {
+  const savedZips = JSON.parse(localStorage.getItem("wa_reader_saved_zips") || "[]");
+  const updated = savedZips.filter(z => z.name !== file.name);
+  updated.push({ name: file.name, data: reader.result });
+  localStorage.setItem("wa_reader_saved_zips", JSON.stringify(updated));
+  populateSavedZipsDropdown();
+};
+reader.readAsDataURL(file);
+      if (!textContent) {  
+        alert("Mesaj faylı (.txt) tapılmadı.");  
+        return;  
+      }  
+  
+      allMessages = parseMessages(textContent, mediaFiles);  
+      populateSenderDropdown(allMessages);
+      detectMyName(allMessages);  
+      displayedCount = 100;
+displayMessages(allMessages, displayedCount);  
+      updateActiveStatus();  
+    } catch (e) {  
+      alert("ZIP fayl oxunarkən xəta: " + e.message);  
+    }  
+  }  
+  function populateSenderDropdown(messages) {
+  const senderSet = new Set();
+  messages.forEach(m => {
+    if (m.sender) senderSet.add(m.sender.trim());
+  });
+
+  const select = document.getElementById("senderSelect");
+  select.innerHTML = `<option value="">İstifadəçi seç...</option>`;
+
+  Array.from(senderSet).sort().forEach(sender => {
+    const option = document.createElement("option");
+    option.value = sender;
+    option.textContent = sender;
+    select.appendChild(option);
+  });
+}
+  
+  function detectMyName(messages) {  
+    const counts = {};  
+    messages.forEach(m => {  
+      if (m.sender) counts[m.sender] = (counts[m.sender] || 0) + 1;  
+    });  
+    let maxCount = 0, candidate = null;  
+    for (const sender in counts) {  
+      if (counts[sender] > maxCount) {  
+        maxCount = counts[sender];  
+        candidate = sender;  
+      }  
+    }  
+    messages.forEach(m => {  
+      m.isMine = (m.sender?.trim() === candidate?.trim());  
+    });  
+  }  
+  
+  function getMediaType(filename) {  
+    const lower = filename.toLowerCase();  
+    if (lower.endsWith(".webp") || lower.includes("sticker")) return "sticker";  
+    if (lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".gif")) return "image";  
+    if (lower.endsWith(".mp4") || lower.endsWith(".webm") || lower.endsWith(".ogg")) return "video";  
+    if (lower.endsWith(".mp3") || lower.endsWith(".wav") || lower.endsWith(".m4a") || lower.endsWith(".opus")) return "audio";  
+    return null;  
+  }  
+  function markAsMine() {
+  const selected = document.getElementById("senderSelect").value;
+  allMessages.forEach(m => {
+m.isMine = m.sender?.trim() !== selected;
+  });
+  displayedCount = 100;
+displayMessages(allMessages, displayedCount);
+  updateActiveStatus();
+}
+  
+  function parseMessages(text, mediaFiles) {  
+    const lines = text.split(/\r?\n/);  
+    const msgs = [];  
+  
+    lines.forEach(line => {  
+      let match;  
+      if ((match = line.match(/^(.*?) (.*?): (.*)$/))) {  
+        msgs.push(buildMessage(match[1], match[2], match[3], mediaFiles));  
+      } else if ((match = line.match(/^(.*?), (.*?) - (.*?): (.*)$/))) {  
+        msgs.push(buildMessage(`${match[1]}, ${match[2]}`, match[3], match[4], mediaFiles));  
+      } else if ((match = line.match(/^(.*?) (.*?) - (.*?): (.*)$/))) {  
+        msgs.push(buildMessage(`${match[1]} ${match[2]}`, match[3], match[4], mediaFiles));  
+      }  
+    });  
+  
+    return msgs;  
+  }  function changeFont() {
+  const font = document.getElementById("fontSelect").value;
+  const fontFamily = `'${font}', sans-serif`;
+  
+  // Bədəni dəyişirik
+  document.body.style.setProperty("font-family", fontFamily, "important");
+  
+  // Mesaj konteynerindəki bütün elementlərə də font tətbiq et
+  const elems = document.querySelectorAll("#messages, #messages .message, #messages .sender, #messages .content, #settingsModal, select, input, button");
+  elems.forEach(el => {
+    el.style.setProperty("font-family", fontFamily, "important");
+  });
+  
+  localStorage.setItem("wa_reader_font", font);
+}
+  
+  function buildMessage(time, sender, content, mediaFiles) {  
+    let media = null;  
+    let mediaType = null;  
+    for (const key in mediaFiles) {  
+      if (content.includes(key)) {  
+        media = mediaFiles[key];  
+        mediaType = getMediaType(key);  
+        break;  
+      }  
+    }  
+    return { time, sender, content, media, mediaType, isMine: false };  
+  }  
+  
+  function displayMessages(messages) {  
+    const container = document.getElementById("messages");  
+    container.innerHTML = "";  
+  
+    messages.forEach((msg, idx) => {  
+      const div = document.createElement("div");  
+      div.className = "message " + (msg.isMine ? "mine" : "theirs");  
+      div.dataset.index = idx;  
+  
+      const mediaHTML = msg.media ? renderMedia(msg.media, msg.mediaType) : "";  
+  
+      div.innerHTML = `  
+        <div class="sender">${escapeHtml(msg.sender)}</div>  
+        <div class="content" id="content-${idx}">${escapeHtml(msg.content)}</div>  
+        ${mediaHTML}  
+        <div class="time">${escapeHtml(msg.time)}</div>  
+      `;  
+      container.appendChild(div);  
+    });  
+  
+    container.scrollTop = container.scrollHeight;  
+  }  
+  
+  function renderMedia(entryOrUrl, mediaType) {
+  if (!entryOrUrl) return "";
+  
+  // Əgər URL string-dirsə
+  if (typeof entryOrUrl === "string") {
+    return renderMediaTag(entryOrUrl, mediaType);
+  }
+  
+  // Əgər hələ blob yaradılmayıbsa (zipEntry-dir)
+  const id = "media-" + Math.random().toString(36).substr(2, 9);
+  
+  setTimeout(async () => {
+    try {
+      const blob = await entryOrUrl.async("blob");
+      const url = URL.createObjectURL(blob);
+      const el = document.getElementById(id);
+      if (el) el.src = url;
+    } catch (e) {
+      console.error("Media yüklənərkən xəta:", e);
+    }
+  }, 0);
+  
+  return renderMediaTag("", mediaType, id);
+}
+  
+  function escapeHtml(text) {  
+    if (!text) return "";  
+    return text  
+      .replace(/&/g, "&amp;")  
+      .replace(/</g, "&lt;")  
+      .replace(/>/g, "&gt;")  
+      .replace(/"/g, "&quot;")  
+      .replace(/'/g, "&#039;");  
+  }  
+  
+  // Axtarış funksiyaları  
+  
+  function onSearchInput() {  
+    const query = document.getElementById("search").value.trim().toLowerCase();  
+    resetHighlights();  
+  
+    if (!query) {  
+      highlights = [];  
+      currentHighlightIndex = -1;  
+      updateHighlightButtons();  
+      displayMessages(allMessages);  
+      return;  
+    }  
+  
+    highlights = [];  
+  
+    for(let idx = allMessages.length - 1; idx >= 0; idx--) {  
+      const msg = allMessages[idx];  
+      const textLow = msg.content.toLowerCase();  
+      let startIndex = 0;  
+      while(true) {  
+        const foundIndex = textLow.indexOf(query, startIndex);  
+        if (foundIndex === -1) break;  
+        highlights.push({ msgIndex: idx, start: foundIndex, length: query.length });  
+        startIndex = foundIndex + query.length;  
+      }  
+    }  
+    
+  
+    if (highlights.length === 0) {  
+      currentHighlightIndex = -1;  
+      updateHighlightButtons();  
+      displayMessages(allMessages);  
+      return;  
+    }  
+  
+    currentHighlightIndex = 0;  
+    updateHighlightButtons();  
+    showHighlight(currentHighlightIndex);  
+  }  
+  
+  function resetHighlights() {  
+    allMessages.forEach((msg, idx) => {  
+      const contentDiv = document.getElementById(`content-${idx}`);  
+      if(contentDiv) contentDiv.innerHTML = escapeHtml(msg.content);  
+    });  
+  }  
+  
+  function showHighlight(index) {  
+    if (index < 0 || index >= highlights.length) return;  
+    const highlight = highlights[index];  
+    const msg = allMessages[highlight.msgIndex];  
+  
+    const contentDiv = document.getElementById(`content-${highlight.msgIndex}`);  
+    if(!contentDiv) return;  
+  
+    const text = msg.content;  
+    const before = escapeHtml(text.substring(0, highlight.start));  
+    const highlightText = escapeHtml(text.substr(highlight.start, highlight.length));  
+    const after = escapeHtml(text.substring(highlight.start + highlight.length));  
+    contentDiv.innerHTML = `${before}<span class="highlight">${highlightText}</span>${after}`;  
+  
+    contentDiv.parentElement.scrollIntoView({ behavior: "smooth", block: "center" });  
+  }  
+  
+  function updateHighlightButtons() {  
+    document.getElementById("prevBtn").disabled = currentHighlightIndex <= 0;  
+    document.getElementById("nextBtn").disabled = currentHighlightIndex < 0 || currentHighlightIndex >= highlights.length - 1;  
+  }  
+  
+  function prevHighlight() {  
+    if (currentHighlightIndex > 0) {  
+      currentHighlightIndex--;  
+      showHighlight(currentHighlightIndex);  
+      updateHighlightButtons();  
+    }  
+  }  
+  
+  function nextHighlight() {  
+    if (currentHighlightIndex < highlights.length - 1) {  
+      currentHighlightIndex++;  
+      showHighlight(currentHighlightIndex);  
+      updateHighlightButtons();  
+    }  
+  }  
+  
+  function resetSearch() {  
+    document.getElementById("search").value = "";  
+    highlights = [];  
+    currentHighlightIndex = -1;  
+    updateHighlightButtons();  
+  }  
+  
+  function updateActiveStatus() {  
+    const statusEl = document.getElementById("activeStatus");  
+    if (allMessages.length === 0) {  
+      statusEl.textContent = "Onlayn deyil";  
+    } else {  
+      const lastMsg = allMessages[allMessages.length - 1];  
+      statusEl.textContent = `Son mesaj: ${lastMsg.time} - ${lastMsg.sender}`;  
+    }  
+  }  
+  
+  // Dildə dəyişiklik zamanı seçimi yadda saxla və dil yenilə  
+  document.addEventListener("DOMContentLoaded", () => {  
+    const langSelect = document.getElementById("langSelect");  
+    const savedLang = localStorage.getItem("wa_reader_lang") || "az";  
+    langSelect.value = savedLang;  
+    changeLanguage();  
+  
+    langSelect.addEventListener("change", () => {  
+      localStorage.setItem("wa_reader_lang", langSelect.value);  
+      changeLanguage();  
+    }); 
+    const translations = {
+  aze: { selectUser: "İstifadəçi seç" },
+  eng: { selectUser: "Select user" },
+  rus: { selectUser: "Выберите пользователя" },
+  tr: { selectUser: "Kullanıcı seç" },
+  zh: { selectUser: "选择用户" },
+  de: { selectUser: "Benutzer auswählen" },
+  fr: { selectUser: "Sélectionner un utilisateur" },
+  
+  es: { selectUser: "Seleccionar usuario" },
+  ar: { selectUser: "اختر المستخدم" },
+  pt: { selectUser: "Selecionar usuário" },
+  hi: { selectUser: "उपयोगकर्ता चुनें" },
+  ja: { selectUser: "ユーザーを選択" }
+};
+  
+    // Klaviaturada Enter düyməsi ilə fayl seçmə label-dan inputa fokus vermək üçün  
+    document.querySelector("label.fileLabel").addEventListener("keydown", e => {  
+      if (e.key === "Enter" || e.key === " ") {  
+        e.preventDefault();  
+        document.getElementById("fileInput").click();  
+      }  
+    });  
+  });
+  function toggleDropdown() {
+  document.getElementById("fontDropdown").classList.toggle("open");
+}
+
+function selectFont(font) {
+  document.getElementById("selectedFont").textContent = font;
+
+  const fontFamily = `'${font}', sans-serif`;
+  document.body.style.setProperty("font-family", fontFamily, "important");
+
+  const elems = document.querySelectorAll("#messages, #messages .message, #messages .sender, #messages .content, #settingsModal, input, button, .custom-dropdown");
+  elems.forEach(el => {
+    el.style.setProperty("font-family", fontFamily, "important");
+  });
+
+  localStorage.setItem("wa_reader_font", font);
+  document.getElementById("fontDropdown").classList.remove("open");
+}
+// Səhifə yüklənəndə əvvəlki seçim tətbiq olunsun
+document.addEventListener("DOMContentLoaded", () => {
+  const savedFont = localStorage.getItem("wa_reader_font") || "Segoe UI";
+  document.getElementById("selectedFont").textContent = savedFont;
+  selectFont(savedFont);
+});
+function toggleLangDropdown() {
+  document.getElementById("langDropdown").classList.toggle("open");
+}
+
+function selectLang(langCode) {
+  const langTextMap = {
+    az: "Azərbaycan dili",
+    en: "English",
+    ru: "Русский",
+    tr: "Türkçe",
+    zh: "中文",
+    de: "Deutsch",
+    fr: "Français",
+    es: "Español",
+    ar: "العربية",
+    pt: "Português",
+    hi: "हिन्दी",
+    ja: "日本語"
+  };
+  
+  document.getElementById("selectedLangText").textContent = langTextMap[langCode];
+  document.getElementById("langDropdown").classList.remove("open");
+  
+  localStorage.setItem("wa_reader_lang", langCode);
+  changeLanguageFromCustom(langCode);
+}
+
+function changeLanguageFromCustom(langCode) {
+  const t = text[langCode] || text.az;
+  
+  document.getElementById("settingsTitle").textContent = t.settingsTitle;
+  document.getElementById("infoText").innerHTML = "<strong>Info:</strong> " + t.infoText;
+  document.getElementById("authorText").textContent = t.authorText;
+  document.getElementById("contactText").textContent = t.contactText;
+  document.getElementById("langLabel").textContent = t.langLabel;
+  document.getElementById("closeBtn").textContent = t.closeBtn;
+  document.getElementById("fileLabel").textContent = t.fileLabel;
+  document.getElementById("search").placeholder = t.searchPlaceholder;
+  document.getElementById("prevBtn").textContent = t.prevBtn;
+  document.getElementById("nextBtn").textContent = t.nextBtn;
+  document.getElementById("fontLabel").innerHTML = "<strong>" + t.fontLabel + "</strong>";
+  document.querySelector("label[for='fontSizeDropdown']").innerHTML = "<strong>" + t.fontSizeLabel + "</strong>";
+  
+  updateFontSizeDropdown(t);
+  
+  const senderSelect = document.getElementById("senderSelect");
+  if (senderSelect && senderSelect.options.length > 0) {
+    senderSelect.options[0].text = t.selectUserPlaceholder;
+  }
+  
+  const zipSelect = document.getElementById("zipSelect");
+  if (zipSelect && zipSelect.options.length > 0) {
+    zipSelect.options[0].text = t.selectZipPlaceholder;
+  }
+  
+  // ⬇️ BUNLARI ƏLAVƏ ET ⬇️
+  document.getElementById("selectedSenderText").textContent = t.selectUserPlaceholder;
+  document.getElementById("selectedZipText").textContent = t.selectZipPlaceholder;
+}
+function closeAllDropdowns(exceptId = "") {
+  document.querySelectorAll(".custom-dropdown").forEach(drop => {
+    if (drop.id !== exceptId) {
+      drop.classList.remove("open");
+    }
+  });
+}
+function toggleLangDropdown() {
+  closeAllDropdowns("langDropdown");
+  document.getElementById("langDropdown").classList.toggle("open");
+}
+function toggleDropdown() {
+  closeAllDropdowns("fontDropdown");
+  document.getElementById("fontDropdown").classList.toggle("open");
+}
+function updateFontSizeDropdown(t) {
+  const dropdown = document.getElementById("fontSizeDropdownOptions");
+  const selected = document.getElementById("selectedFontSizeText");
+  if (!dropdown || !selected) return;
+
+  const savedKey = localStorage.getItem("wa_reader_font_size") || "medium";
+  const options = t.fontSizeOptions;
+
+  // Seçili başlığı dəyiş
+  selected.textContent = options[savedKey];
+
+  // Köhnələri sil
+  dropdown.innerHTML = "";
+
+  // Yenilərini əlavə et
+  for (const key in options) {
+    const div = document.createElement("div");
+    div.textContent = options[key];
+    div.onclick = () => selectFontSize(key); // onclick funksiyası
+    dropdown.appendChild(div);
+  }
+}
+
+function toggleFontSizeDropdown() {
+  closeAllDropdowns("fontSizeDropdown");
+  document.getElementById("fontSizeDropdown").classList.toggle("open");
+}
+document.addEventListener("click", function (e) {
+  const isDropdown = e.target.closest(".custom-dropdown");
+  if (!isDropdown) {
+    closeAllDropdowns();
+  }
+});
+// Səhifə yüklənəndə əvvəlki dil bərpa olunsun
+document.addEventListener("DOMContentLoaded", () => {
+  const savedLang = localStorage.getItem("wa_reader_lang") || "az";
+  selectLang(savedLang);
+});
+function selectFontSize(sizeKey) {
+  const sizeMap = {
+    small: { text: "Kiçik", px: "13px" },
+    medium: { text: "Orta", px: "15px" },
+    large: { text: "Böyük", px: "17px" },
+    xlarge: { text: "Çox böyük", px: "19px" }
+  };
+
+  const selected = sizeMap[sizeKey] || sizeMap.medium;
+  document.getElementById("selectedFontSizeText").textContent = selected.text;
+  document.getElementById("fontSizeDropdown").classList.remove("open");
+
+  // Bütün yazılı elementlərə font-size tətbiq et
+  const textElements = document.querySelectorAll(
+    "body, body *:not(script):not(style)"
+  );
+  textElements.forEach(el => {
+    el.style.setProperty("font-size", selected.px, "important");
+  });
+
+  localStorage.setItem("wa_reader_font_size", sizeKey);
+}
+document.addEventListener("DOMContentLoaded", () => {
+  const savedFont = localStorage.getItem("wa_reader_font") || "Segoe UI";
+  selectFont(savedFont);
+
+  const savedSizeKey = localStorage.getItem("wa_reader_font_size") || "medium";
+  selectFontSize(savedSizeKey);
+  
+});
+// Dropdown-u saxlanılmış ZIP-lərlə doldur
+function populateSavedZipsDropdown() {
+  const select = document.getElementById("savedZipsDropdown");
+  if (!select) return;
+
+  const savedZips = JSON.parse(localStorage.getItem("wa_reader_saved_zips") || "[]");
+  select.innerHTML = `<option value="">Əvvəlki ZIP faylları...</option>`;
+  
+  savedZips.forEach(z => {
+    const opt = document.createElement("option");
+    opt.value = z.name;
+    opt.textContent = z.name;
+    select.appendChild(opt);
+  });
+}
+
+// Dropdowndan seçilən ZIP-i oxu
+function loadSavedZip(fileName) {
+  if (!fileName) return;
+  const savedZips = JSON.parse(localStorage.getItem("wa_reader_saved_zips") || "[]");
+  const zipData = savedZips.find(z => z.name === fileName);
+  if (!zipData) return;
+
+  fetch(zipData.data)
+    .then(res => res.blob())
+    .then(blob => processZip(blob));
+}
+
+// Saxlanmış ZIP-i oxu (ZIP-i emal edən funksiya)
+async function processZip(fileOrBlob) {
+  resetSearch();
+
+  try {
+    const zip = await JSZip.loadAsync(fileOrBlob);
+    let textContent = "";
+    const mediaFiles = {};
+
+    for (const [filename, zipEntry] of Object.entries(zip.files)) {
+      if (filename.endsWith(".txt") && !textContent) {
+        textContent = await zipEntry.async("string");
+      } else {
+        const blob = await zipEntry.async("blob");
+        mediaFiles[filename.split("/").pop()] = URL.createObjectURL(blob);
+      }
+    }
+
+    if (!textContent) {
+      alert("Mesaj faylı (.txt) tapılmadı.");
+      return;
+    }
+
+    allMessages = parseMessages(textContent, mediaFiles);
+    populateSenderDropdown(allMessages);
+    detectMyName(allMessages);
+    displayMessages(allMessages);
+    updateActiveStatus();
+  } catch (e) {
+    alert("ZIP oxunarkən xəta: " + e.message);
+  }
+}
+// İSTİFADƏÇİ Custom Dropdown
+function toggleSenderDropdown() {
+  closeAllDropdowns("senderDropdown");
+  document.getElementById("senderDropdown").classList.toggle("open");
+}
+
+function selectSender(sender) {
+  document.getElementById("selectedSenderText").textContent = sender;
+  document.getElementById("senderDropdown").classList.remove("open");
+  document.getElementById("senderSelect").value = sender;
+  markAsMine();
+}
+
+function populateSenderDropdown(messages) {
+  const senderSet = new Set();
+  messages.forEach(m => {
+    if (m.sender) senderSet.add(m.sender.trim());
+  });
+
+  const select = document.getElementById("senderSelect");
+  const dropdown = document.getElementById("senderDropdownOptions");
+
+  select.innerHTML = `<option value="">İstifadəçi seç...</option>`;
+  dropdown.innerHTML = "";
+
+  Array.from(senderSet).sort().forEach(sender => {
+    const option = document.createElement("option");
+    option.value = sender;
+    option.textContent = sender;
+    select.appendChild(option);
+
+    const div = document.createElement("div");
+    div.textContent = sender;
+    div.onclick = () => selectSender(sender);
+    dropdown.appendChild(div);
+  });
+}
+
+// ZIP FAYLLARI Custom Dropdown
+function toggleZipDropdown() {
+  closeAllDropdowns("zipDropdown");
+  document.getElementById("zipDropdown").classList.toggle("open");
+}
+
+function selectZip(name) {
+  document.getElementById("selectedZipText").textContent = name;
+  document.getElementById("zipDropdown").classList.remove("open");
+  document.getElementById("savedZipsDropdown").value = name;
+  loadSavedZip(name);
+}
+
+function populateSavedZipsDropdown() {
+  const select = document.getElementById("savedZipsDropdown");
+  const dropdown = document.getElementById("zipDropdownOptions");
+
+  const savedZips = JSON.parse(localStorage.getItem("wa_reader_saved_zips") || "[]");
+  select.innerHTML = `<option value="">Əvvəlki ZIP faylları...</option>`;
+  dropdown.innerHTML = "";
+
+  savedZips.forEach(z => {
+    const opt = document.createElement("option");
+    opt.value = z.name;
+    opt.textContent = z.name;
+    select.appendChild(opt);
+
+    const div = document.createElement("div");
+    div.textContent = z.name;
+    div.onclick = () => selectZip(z.name);
+    dropdown.appendChild(div);
+  });
+}
+document.getElementById("messages").addEventListener("scroll", () => {
+  const container = document.getElementById("messages");
+
+  // Yuxarıya yaxınlaşanda
+  if (container.scrollTop < 100) {
+    if (displayedCount < allMessages.length) {
+      displayedCount += 50; // daha 50 mesaj əlavə göstər
+      displayMessages(allMessages, displayedCount);
+    }
+  }
+});
+function renderMediaTag(src, type, id = null) {
+  const common = id ? `id="${id}"` : `src="${src}"`;
+  switch (type) {
+    case "image":
+    case "sticker":
+      return `<img ${common} loading="lazy" alt="Media">`;
+    case "video":
+      return `<video ${common} controls preload="none" playsinline></video>`;
+    case "audio":
+      return `<audio ${common} controls preload="none"></audio>`;
+    default:
+      return "";
+  }
+}
+</script></body>  
+</html>
