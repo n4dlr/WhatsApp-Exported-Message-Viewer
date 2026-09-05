@@ -75,7 +75,9 @@ export const importService = {
           import.meta.env.VITE_BACKEND_URL ?? '',
           progress => {
             importStore.setProgress(10 + Math.round(progress * 0.6))
-            importStore.setStatus(`Uploading large database... ${progress}%`)
+            importStore.setStatus(progress >= 100
+              ? 'Upload complete. Backend is opening the SQLite database...'
+              : `Uploading large database... ${progress}%`)
           }
         )
         importStore.setProgress(85)

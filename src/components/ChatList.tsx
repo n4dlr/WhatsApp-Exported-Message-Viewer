@@ -1,23 +1,56 @@
-import React, { useMemo, useState } from 'react'
+import React, { useRef, useCallback } from 'react'
 import { useChatStore } from '../stores/chatStore'
 import ChatItem from './ChatItem'
+import { Loader2 } from 'lucide-react'
 
-export default function ChatList(){
-  const { conversations } = useChatStore()
-  const [query, setQuery] = useState('')
-  const visibleConversations = useMemo(() => conversations.filter(conversation =>
-    (conversation.name ?? '').toLowerCase().includes(query.toLowerCase())
-  ), [conversations, query])
+export default function ChatList() {
+  const {
+    conversations,
+    hasMoreConversations,
+    isLoadingConversations,
+    loadMoreChats,
+    totalConversations
+  } = useChatStore()
+
+  const listRef = useRef<HTMLDivElement | null>(null)
+
+  const handleScroll = useCallback(() => {
+    if (!listRef.current) return
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current
+    if (scrollHeight - (scrollTop + clientHeight) < 250) {
+      if (hasMoreConversations && !isLoadingConversations) {
+        void loadMoreChats()
+      }
+    }
+  }, [hasMoreConversations, isLoadingConversations, loadMoreChats])
+
   return (
-    <div>
-      <div className="p-3 border-b">
-        <input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search conversations" className="w-full p-2 rounded bg-gray-100" />
-      </div>
-      {visibleConversations.map(c => (
+    <div
+      ref={listRef}
+      onScroll={handleScroll}
+      className="h-full overflow-y-auto overflow-x-hidden flex flex-col"
+    >
+      {conversations.map(c => (
         <ChatItem key={c.id} conversation={c} />
       ))}
-      {visibleConversations.length===0 && (
-        <div className="p-6 text-sm text-gray-500">No conversations yet. Import a chat or database to start.</div>
+
+      {isLoadingConversations && (
+        <div className="py-4 flex items-center justify-center text-[var(--wa-text-secondary)] text-sm gap-2">
+          <Loader2 size={18} className="animate-spin text-[var(--wa-green)]" />
+          <span>Çatlar arxa planda yüklənir...</span>
+        </div>
+      )}
+
+      {!isLoadingConversations && conversations.length === 0 && (
+        <div className="p-8 text-center text-sm text-[var(--wa-text-secondary)]">
+          Heç bir söhbət tapılmadı.
+        </div>
+      )}
+
+      {!hasMoreConversations && conversations.length > 0 && (
+        <div className="py-3 text-center text-[11px] text-[var(--wa-text-secondary)] opacity-60">
+          Cəmi {totalConversations} söhbətin hamısı göstərildi
+        </div>
       )}
     </div>
   )
