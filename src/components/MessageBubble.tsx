@@ -19,7 +19,9 @@ import {
   Vote,
   Lock,
   Copy,
-  SmilePlus
+  SmilePlus,
+  UserCheck,
+  Edit3
 } from 'lucide-react'
 
 function formatMessageTime(timestamp: number): string {
@@ -66,7 +68,7 @@ export default function MessageBubble({
   message: Message
   isGroup?: boolean
 }) {
-  const { setInspectedMessageId } = useChatStore()
+  const { setInspectedMessageId, customContacts, setEditingContact } = useChatStore()
   const [actionMenuOpen, setActionMenuOpen] = useState(false)
   const [showQuickReactions, setShowQuickReactions] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -94,9 +96,33 @@ export default function MessageBubble({
     }
   }
 
+  // Sender Name Resolution
   const rawSender = message.sender?.phoneNumber || message.sender?.name || ''
-  const displaySender = formatPhoneNumber(rawSender) || rawSender || 'İştirakçı'
-  const senderColor = getParticipantColor(rawSender)
+  const customSenderName = (message.sender?.phoneNumber && customContacts[message.sender.phoneNumber])
+    || (rawSender && customContacts[rawSender])
+    || null
+
+  const resolvedDisplayName = customSenderName
+    || message.sender?.displayName
+    || null
+
+  const formattedPhone = message.sender?.phoneNumber ? formatPhoneNumber(message.sender.phoneNumber) : null
+
+  // Final display name
+  const displaySender = resolvedDisplayName || formattedPhone || 'İştirakçı'
+  const senderColor = getParticipantColor(rawSender || displaySender)
+
+  // Quoted Author Resolution
+  let quotedAuthor = 'İştirakçı'
+  if (message.quoted) {
+    if (message.quoted.fromMe) {
+      quotedAuthor = 'Siz'
+    } else {
+      const qPhone = message.quoted.senderPhone
+      const qCustom = qPhone && customContacts[qPhone]
+      quotedAuthor = qCustom || message.quoted.senderName || (qPhone ? formatPhoneNumber(qPhone) : 'İştirakçı')
+    }
+  }
 
   return (
     <div
@@ -166,6 +192,20 @@ export default function MessageBubble({
               <span>Bütün Sütunlara Bax (DB Record)</span>
             </button>
 
+            {rawSender && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingContact({ identifier: rawSender, currentName: resolvedDisplayName || '' })
+                  setActionMenuOpen(false)
+                }}
+                className="w-full text-left px-3.5 py-2 hover:bg-[var(--wa-hover)] flex items-center gap-2.5 text-[var(--wa-text-primary)]"
+              >
+                <Edit3 size={15} />
+                <span>Kontakt Adını Dəyiş</span>
+              </button>
+            )}
+
             {message.body && (
               <button
                 type="button"
@@ -192,10 +232,17 @@ export default function MessageBubble({
         {/* Sender Name in Group Chats */}
         {!isOut && isGroup && (
           <div
-            className="text-[12.8px] font-semibold mb-1 flex items-center justify-between"
+            onClick={() => rawSender && setEditingContact({ identifier: rawSender, currentName: resolvedDisplayName || '' })}
+            className="text-[12.8px] font-semibold mb-1 flex items-baseline gap-2 cursor-pointer hover:underline"
             style={{ color: senderColor }}
+            title="Kontakt adını dəyişmək üçün klikləyin"
           >
             <span>{displaySender}</span>
+            {resolvedDisplayName && formattedPhone && (
+              <span className="text-[11px] opacity-75 font-normal font-mono text-[var(--wa-text-secondary)]">
+                {formattedPhone}
+              </span>
+            )}
           </div>
         )}
 
@@ -204,16 +251,16 @@ export default function MessageBubble({
           <div
             className="wa-quote-card mb-1.5 p-2 text-xs select-none"
             style={{
-              borderLeftColor: getParticipantColor(message.quoted.senderPhone || '')
+              borderLeftColor: getParticipantColor(message.quoted.senderPhone || quotedAuthor)
             }}
           >
             <div
               className="font-semibold mb-0.5"
               style={{
-                color: getParticipantColor(message.quoted.senderPhone || '')
+                color: getParticipantColor(message.quoted.senderPhone || quotedAuthor)
               }}
             >
-              {message.quoted.fromMe ? 'Siz' : formatPhoneNumber(message.quoted.senderPhone) || 'İştirakçı'}
+              {quotedAuthor}
             </div>
             <div className="text-[var(--wa-text-secondary)] line-clamp-2 italic">
               {message.quoted.body || 'Mesaj'}
@@ -336,7 +383,7 @@ export default function MessageBubble({
 
         {/* Text Message Body */}
         {message.type !== 'poll' && message.body && (
-          <div className="whitespace-pre-wrap break-words pr-12 text-[var(--wa-text-primary)] message-text-selectable">
+          <div className="whitespace-pre-wrap break-words pr-12 text-[var(--wa-text-primary)]">
             {renderFormattedText(message.body)}
           </div>
         )}

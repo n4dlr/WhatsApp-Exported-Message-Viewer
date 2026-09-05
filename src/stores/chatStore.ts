@@ -25,8 +25,11 @@ type ChatState = {
   isLoadingConversations: boolean
   chatFilter: ChatFilter
   chatSearchQuery: string
-  showArchived: boolean
+
+  // Archive state
   archivedCount: number
+  isArchivedView: boolean
+  setIsArchivedView: (isArchived: boolean) => void
 
   // Active chat state
   activeConversationId: string | null
@@ -35,6 +38,12 @@ type ChatState = {
   isLoadingMessages: boolean
   oldestMessageId: number | null
   inChatSearchQuery: string
+
+  // Custom contact names (saved in localStorage)
+  customContacts: Record<string, string>
+  setCustomContact: (identifier: string, name: string) => void
+  editingContact: { identifier: string; currentName: string } | null
+  setEditingContact: (contact: { identifier: string; currentName: string } | null) => void
 
   // Inspect & modal states
   inspectedMessageId: number | null
@@ -57,7 +66,6 @@ type ChatState = {
   setIsTableExplorerOpen: (open: boolean) => void
   setIsChatDetailsOpen: (open: boolean) => void
   setIsImportCenterOpen: (open: boolean) => void
-  setShowArchived: (show: boolean) => void
 
   // Chat loading actions
   loadChats: (reset?: boolean) => Promise<void>
@@ -67,6 +75,15 @@ type ChatState = {
 }
 
 const getBackendUrl = () => import.meta.env.VITE_BACKEND_URL || ''
+
+const loadStoredContacts = (): Record<string, string> => {
+  try {
+    const raw = localStorage.getItem('chatvault_custom_contacts')
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
 
 export const useChatStore = create<ChatState>((set, get) => ({
   remoteSessionId: null,
@@ -79,8 +96,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isLoadingConversations: false,
   chatFilter: 'all',
   chatSearchQuery: '',
-  showArchived: false,
+
   archivedCount: 0,
+  isArchivedView: false,
 
   activeConversationId: null,
   messages: [],
@@ -89,13 +107,39 @@ export const useChatStore = create<ChatState>((set, get) => ({
   oldestMessageId: null,
   inChatSearchQuery: '',
 
+  customContacts: loadStoredContacts(),
+  editingContact: null,
+
   inspectedMessageId: null,
   isTableExplorerOpen: false,
   isChatDetailsOpen: false,
   isImportCenterOpen: true,
 
-  theme: 'dark', // Modern WhatsApp default
+  theme: 'dark',
   language: 'az',
+
+  setIsArchivedView: isArchived => {
+    set({ isArchivedView: isArchived, conversationsOffset: 0 })
+    void get().loadChats(true)
+  },
+
+  setCustomContact: (identifier, name) => {
+    const trimmed = name.trim()
+    set(state => {
+      const updated = { ...state.customContacts }
+      if (trimmed) {
+        updated[identifier] = trimmed
+      } else {
+        delete updated[identifier]
+      }
+      try {
+        localStorage.setItem('chatvault_custom_contacts', JSON.stringify(updated))
+      } catch {}
+      return { customContacts: updated, editingContact: null }
+    })
+  },
+
+  setEditingContact: contact => set({ editingContact: contact }),
 
   setRemoteSession: (sessionId, stats) => {
     set({
@@ -106,7 +150,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       conversationsOffset: 0,
       totalConversations: stats?.totalChats || 0,
       activeConversationId: null,
-      messages: []
+      messages: [],
+      isArchivedView: false
     })
     if (sessionId) {
       void get().loadChats(true)
@@ -138,13 +183,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setIsTableExplorerOpen: open => set({ isTableExplorerOpen: open }),
   setIsChatDetailsOpen: open => set({ isChatDetailsOpen: open }),
   setIsImportCenterOpen: open => set({ isImportCenterOpen: open }),
-  setShowArchived: (show) => {
-    set({ showArchived: show, conversationsOffset: 0 })
-    void get().loadChats(true)
-  },
 
   loadChats: async (reset = false) => {
-    const { remoteSessionId, chatFilter, chatSearchQuery, isLoadingConversations, showArchived } = get()
+    const { remoteSessionId, chatFilter, chatSearchQuery, isArchivedView, isLoadingConversations } = get()
     if (!remoteSessionId || isLoadingConversations) return
 
     set({ isLoadingConversations: true })
@@ -156,7 +197,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         offset: String(offset),
         filter: chatFilter,
         search: chatSearchQuery,
-        showArchived: String(showArchived)
+        view: isArchivedView ? 'archived' : 'active'
       })
 
       const res = await fetch(`${getBackendUrl()}/api/session/${remoteSessionId}/chats?${params.toString()}`)
@@ -167,7 +208,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       set(state => {
         const combined = reset ? newChats : [...state.conversations, ...newChats]
-        // Deduplicate
         const seen = new Set()
         const deduped = combined.filter(c => {
           if (seen.has(c.id)) return false
@@ -175,7 +215,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
           return true
         })
 
-        // Auto select first chat if none selected
         const currentActive = state.activeConversationId
         const activeConversationId = currentActive && deduped.some(c => c.id === currentActive)
           ? currentActive
@@ -184,15 +223,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
         return {
           conversations: deduped,
           totalConversations: data.total,
+          archivedCount: data.archivedCount ?? state.archivedCount,
           conversationsOffset: offset + newChats.length,
           hasMoreConversations: data.hasMore,
           activeConversationId,
-          isLoadingConversations: false,
-          ...(data.archivedCount !== undefined ? { archivedCount: Number(data.archivedCount) } : {})
+          isLoadingConversations: false
         }
       })
 
-      // If a chat was auto-selected and messages are empty, load its messages
       const activeId = get().activeConversationId
       if (activeId && get().messages.length === 0) {
         void get().selectConversation(activeId)

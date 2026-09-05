@@ -19,12 +19,21 @@ import {
 } from 'lucide-react'
 
 export default function ChatItem({ conversation }: { conversation: Conversation }) {
-  const { activeConversationId, selectConversation } = useChatStore()
+  const { activeConversationId, selectConversation, customContacts, isArchivedView } = useChatStore()
   const isSelected = conversation.id === activeConversationId
 
-  const displayName = conversation.isGroup
-    ? (conversation.name || 'Qrup Söhbəti')
-    : (formatPhoneNumber(conversation.phoneNumber) || conversation.name || 'Söhbət')
+  // Custom contact name override or database contact name
+  const customName = conversation.phoneNumber ? customContacts[conversation.phoneNumber] : null
+  const contactName = customName || conversation.contactName
+
+  let displayName = conversation.name || 'Söhbət'
+  if (!conversation.isGroup) {
+    if (contactName) {
+      displayName = contactName
+    } else if (conversation.phoneNumber) {
+      displayName = formatPhoneNumber(conversation.phoneNumber) || conversation.phoneNumber
+    }
+  }
 
   const initials = displayName
     .replace(/[^\p{L}\p{N}\s]/gu, '')
@@ -32,7 +41,7 @@ export default function ChatItem({ conversation }: { conversation: Conversation 
     .slice(0, 2)
     .toUpperCase() || 'W'
 
-  const avatarBg = getParticipantColor(conversation.id + (conversation.name || ''))
+  const avatarBg = getParticipantColor(conversation.id + displayName)
   const lastMsg = conversation.lastMessage
   const timeFormatted = formatWhatsAppTime(conversation.lastTimestamp)
 
@@ -113,7 +122,7 @@ export default function ChatItem({ conversation }: { conversation: Conversation 
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {conversation.archived && (
+            {conversation.archived && !isArchivedView && (
               <Archive size={14} className="text-[var(--wa-text-secondary)] opacity-70" />
             )}
             {conversation.unreadCount != null && conversation.unreadCount > 0 && (

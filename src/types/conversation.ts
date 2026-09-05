@@ -4,6 +4,7 @@ export type Conversation = {
   jid?: string
   phoneNumber?: string
   name?: string
+  contactName?: string | null
   subject?: string
   server?: string
   isGroup?: boolean

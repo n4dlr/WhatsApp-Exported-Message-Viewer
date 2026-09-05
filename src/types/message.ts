@@ -21,6 +21,7 @@ export type MessageQuoted = {
   body?: string | null
   senderJid?: string | null
   senderPhone?: string | null
+  senderName?: string | null
   fromMe?: boolean
 }
 
@@ -54,6 +55,7 @@ export type Message = {
   rawMessageType?: number
   sender?: {
     name: string
+    displayName?: string | null
     jid?: string
     phoneNumber?: string
   }

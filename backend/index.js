@@ -25,7 +25,7 @@ app.use((req, res, next) => {
 fs.mkdirSync('tmp', { recursive: true })
 const upload = multer({ dest: 'tmp/' })
 
-// In-memory active database sessions: sessionId -> { db, path, isTemporary, createdAt, isModernSchema }
+// In-memory active database sessions
 const sessions = new Map()
 
 function quoteIdentifier(value) {
@@ -48,13 +48,11 @@ function detectSchema(db) {
     return { type: 'modern' }
   }
 
-  // Legacy schema detection (e.g. table "messages")
   const legacyTable = tables.find(t => /^messages?$/i.test(t))
   if (legacyTable) {
     return { type: 'legacy', messageTable: legacyTable }
   }
 
-  // Generic fallback
   const anyMessage = tables.find(t => /message/i.test(t))
   if (anyMessage) {
     return { type: 'generic', messageTable: anyMessage }
@@ -63,12 +61,94 @@ function detectSchema(db) {
   throw new Error('Tanınan WhatsApp mesaj cədvəli tapılmadı (message və ya messages).')
 }
 
+// Build contact book from message_vcard, lid_display_name, username_change, and mentions
+function buildContactBook(db) {
+  const contactBook = new Map()
+
+  // 1. From message_vcard & message_vcard_jid
+  try {
+    const vcards = db.prepare(`
+      SELECT mv.vcard, mvj.vcard_jid_row_id 
+      FROM message_vcard mv 
+      LEFT JOIN message_vcard_jid mvj ON mv._id = mvj.vcard_row_id
+    `).all()
+    for (const row of vcards) {
+      if (!row.vcard) continue
+      const fnMatch = row.vcard.match(/FN:(.+)/i)
+      const waidMatch = row.vcard.match(/waid=([0-9]+)/i)
+      const fn = fnMatch ? fnMatch[1].trim() : null
+      const waid = waidMatch ? waidMatch[1].trim() : null
+      if (fn) {
+        if (waid) contactBook.set(waid, fn)
+        if (row.vcard_jid_row_id) contactBook.set('jid_' + row.vcard_jid_row_id, fn)
+      }
+    }
+  } catch {}
+
+  // 2. From lid_display_name
+  try {
+    const lidNames = db.prepare(`
+      SELECT lid_row_id, display_name, username 
+      FROM lid_display_name 
+      WHERE (username IS NOT NULL AND username != '') 
+         OR (display_name IS NOT NULL AND display_name != '' AND display_name NOT LIKE '%∙%')
+    `).all()
+    for (const row of lidNames) {
+      const name = (row.display_name && !row.display_name.includes('∙')) 
+        ? row.display_name.trim() 
+        : (row.username ? '@' + row.username.trim() : null)
+      if (name) {
+        contactBook.set('jid_' + row.lid_row_id, name)
+      }
+    }
+  } catch {}
+
+  // 3. From message_system_username_change
+  try {
+    const sysUsernames = db.prepare(`
+      SELECT user_jid, new_username, display_name 
+      FROM message_system_username_change 
+      WHERE (display_name IS NOT NULL AND display_name != '') 
+         OR (new_username IS NOT NULL AND new_username != '')
+    `).all()
+    for (const row of sysUsernames) {
+      const name = row.display_name 
+        ? row.display_name.replace(/^[~ \s]+/, '').trim() 
+        : (row.new_username ? '@' + row.new_username.trim() : null)
+      if (name && row.user_jid) {
+        if (!contactBook.has('jid_' + row.user_jid)) {
+          contactBook.set('jid_' + row.user_jid, name)
+        }
+      }
+    }
+  } catch {}
+
+  // 4. From message_mentions
+  try {
+    const mentions = db.prepare(`
+      SELECT jid_row_id, display_name 
+      FROM message_mentions 
+      WHERE display_name IS NOT NULL AND display_name != ''
+    `).all()
+    for (const row of mentions) {
+      if (row.display_name && row.jid_row_id) {
+        const cleaned = row.display_name.replace(/^[⁨\s]+|[⁩\s]+$/g, '').trim()
+        if (cleaned && !contactBook.has('jid_' + row.jid_row_id)) {
+          contactBook.set('jid_' + row.jid_row_id, cleaned)
+        }
+      }
+    }
+  } catch {}
+
+  return contactBook
+}
+
 function registerSession(databasePath, isTemporary = false) {
   const sessionId = crypto.randomUUID()
   const db = new DatabaseSync(databasePath, { readOnly: true })
   const schema = detectSchema(db)
+  const contactBook = buildContactBook(db)
 
-  // Get total message count
   let totalMessages = 0
   let totalChats = 0
 
@@ -95,6 +175,7 @@ function registerSession(databasePath, isTemporary = false) {
     isTemporary,
     createdAt: Date.now(),
     schema,
+    contactBook,
     stats: {
       totalMessages,
       totalChats,
@@ -120,7 +201,7 @@ app.get('/api/health', (req, res) => {
   })
 })
 
-// Auto-detect local databases in the current directory and parent
+// Auto-detect local databases in workspace and parent directory
 app.get('/api/detect-local', (req, res) => {
   try {
     const searchDirs = [process.cwd(), path.join(process.cwd(), '..')]
@@ -148,7 +229,6 @@ app.get('/api/detect-local', (req, res) => {
       }
     }
 
-    // Sort by largest first or most recently modified
     detected.sort((a, b) => b.sizeBytes - a.sizeBytes)
     return res.json({ detected })
   } catch (err) {
@@ -156,7 +236,7 @@ app.get('/api/detect-local', (req, res) => {
   }
 })
 
-// Open local database file directly without uploading
+// Open local database directly
 app.post('/api/import/local-file', (req, res) => {
   try {
     const rawPath = String(req.body.filePath || '').trim()
@@ -195,7 +275,7 @@ app.post('/api/import/database', upload.single('file'), (req, res) => {
   }
 })
 
-// Decrypt encrypted WhatsApp backup (.crypt14 / .crypt15)
+// Decrypt encrypted WhatsApp backup
 app.post('/api/import/encrypted-backup', upload.single('file'), async (req, res) => {
   let temporaryPath
   let decryptedPath
@@ -274,7 +354,7 @@ app.get('/api/session/:sessionId/info', (req, res) => {
   })
 })
 
-// Chunked chat loading with search, filter (all, unread, groups), pagination
+// Chunked chat loading with Archive separation, contact name resolution, and search
 app.get('/api/session/:sessionId/chats', (req, res) => {
   const session = sessions.get(req.params.sessionId)
   if (!session) return res.status(404).send('Sessiya tapılmadı.')
@@ -284,14 +364,31 @@ app.get('/api/session/:sessionId/chats', (req, res) => {
     const offset = Math.max(Number(req.query.offset) || 0, 0)
     const search = String(req.query.search || '').trim().toLowerCase()
     const filter = String(req.query.filter || 'all').toLowerCase() // 'all' | 'unread' | 'groups' | 'archived'
-    const showArchived = req.query.showArchived === 'true'
+    const view = String(req.query.view || 'active').toLowerCase() // 'active' (unarchived) or 'archived'
 
     const db = session.db
     const schema = session.schema
+    const contactBook = session.contactBook
 
     if (schema.type === 'modern') {
-      let filterClause = showArchived ? 'c.archived = 1' : 'COALESCE(c.archived, 0) = 0'
+      // Archived chats count in database
+      const archivedCount = Number(db.prepare(`
+        SELECT COUNT(*) as count 
+        FROM chat 
+        WHERE archived = 1 
+          AND (last_message_row_id IS NOT NULL OR sort_timestamp IS NOT NULL)
+      `).get()?.count || 0)
+
+      let filterClause = '1=1'
       const params = []
+
+      // Archive filter: if view === 'archived' or filter === 'archived', show only archived
+      if (view === 'archived' || filter === 'archived') {
+        filterClause += ' AND c.archived = 1'
+      } else {
+        // Normal chat view: exclude archived chats, exactly like real WhatsApp Web
+        filterClause += ' AND (c.archived = 0 OR c.archived IS NULL)'
+      }
 
       if (filter === 'unread') {
         filterClause += ' AND c.unseen_message_count > 0'
@@ -305,7 +402,7 @@ app.get('/api/session/:sessionId/chats', (req, res) => {
         params.push(s, s, s)
       }
 
-      // Fast chat listing using chat, jid, and last_message_row_id
+      // Count query
       const countQuery = `
         SELECT COUNT(*) as count
         FROM chat c
@@ -344,7 +441,15 @@ app.get('/api/session/:sessionId/chats', (req, res) => {
 
       const chats = rows.map(r => {
         const isGroup = r.server === 'g.us' || Boolean(r.subject)
-        const displayName = r.subject || r.phone_number || r.jid || 'Naməlum söhbət'
+
+        // Resolve contact name for 1-on-1 chats
+        let resolvedName = null
+        if (!isGroup) {
+          resolvedName = contactBook.get('jid_' + r.jid_row_id) || (r.phone_number ? contactBook.get(r.phone_number) : null)
+        }
+
+        const displayName = r.subject || resolvedName || r.phone_number || r.jid || 'Söhbət'
+
         return {
           id: String(r.id),
           jidRowId: r.jid_row_id,
@@ -352,6 +457,7 @@ app.get('/api/session/:sessionId/chats', (req, res) => {
           phoneNumber: r.phone_number,
           server: r.server,
           name: displayName,
+          contactName: resolvedName,
           subject: r.subject,
           isGroup,
           archived: Boolean(r.archived),
@@ -367,24 +473,17 @@ app.get('/api/session/:sessionId/chats', (req, res) => {
         }
       })
 
-      // Get archived count for banner display
-      let archivedCount = 0
-      try {
-        archivedCount = Number(db.prepare("SELECT COUNT(*) as c FROM chat c JOIN jid j ON c.jid_row_id = j._id WHERE c.archived = 1").get()?.c || 0)
-      } catch {}
-
       return res.json({
         total,
+        archivedCount,
         limit,
         offset,
         hasMore: offset + chats.length < total,
-        chats,
-        archivedCount
+        chats
       })
     }
 
-    // Fallback for legacy or generic tables
-    return res.json({ total: 0, chats: [], hasMore: false, archivedCount: 0 })
+    return res.json({ total: 0, archivedCount: 0, chats: [], hasMore: false })
   } catch (err) {
     console.error('Error fetching chats:', err)
     return res.status(500).send(err instanceof Error ? err.message : 'Çatlar yüklənərkən xəta baş verdi.')
@@ -407,6 +506,7 @@ app.get('/api/session/:sessionId/chats/:chatId/messages', (req, res) => {
 
     const db = session.db
     const schema = session.schema
+    const contactBook = session.contactBook
 
     if (schema.type === 'modern') {
       let whereClause = 'm.chat_row_id = ?'
@@ -422,18 +522,22 @@ app.get('/api/session/:sessionId/chats/:chatId/messages', (req, res) => {
         params.push(`%${search}%`)
       }
 
-      // Fast query using composite index (chat_row_id, _id)
+      // Fast query with composite index (chat_row_id, _id) and sender resolution
       const query = `
         SELECT 
           m.*,
           sender_j.raw_string as sender_jid,
           sender_j.user as sender_user,
           sender_j.server as sender_server,
-          COALESCE(mapped_j.user, sender_j.user) as sender_resolved_phone
+          COALESCE(mapped_j.user, sender_j.user) as sender_resolved_phone,
+          mapped_j._id as mapped_jid_id,
+          ldn.username as lid_username,
+          ldn.display_name as lid_display_name
         FROM message m
         LEFT JOIN jid sender_j ON m.sender_jid_row_id = sender_j._id
         LEFT JOIN jid_map jm ON sender_j._id = jm.lid_row_id
         LEFT JOIN jid mapped_j ON jm.jid_row_id = mapped_j._id
+        LEFT JOIN lid_display_name ldn ON sender_j._id = ldn.lid_row_id
         WHERE ${whereClause}
         ORDER BY m._id DESC
         LIMIT ?
@@ -444,7 +548,6 @@ app.get('/api/session/:sessionId/chats/:chatId/messages', (req, res) => {
         return res.json({ messages: [], hasMore: false, oldestId: null, newestId: null })
       }
 
-      // Chronological order: reverse from DESC to ASC for the chat timeline
       const rows = rawRows.slice().reverse()
       const ids = rows.map(r => r._id)
       const idPlaceholders = ids.map(() => '?').join(',')
@@ -453,11 +556,20 @@ app.get('/api/session/:sessionId/chats/:chatId/messages', (req, res) => {
       const medias = db.prepare(`SELECT * FROM message_media WHERE message_row_id IN (${idPlaceholders})`).all(...ids)
       const mediaMap = new Map(medias.map(m => [m.message_row_id, m]))
 
-      // Batch fetch quoted messages
+      // Batch fetch quoted messages with resolved sender phone, LID, and username
       const quotes = db.prepare(`
-        SELECT mq.*, sender_j.raw_string as quoted_sender_jid, sender_j.user as quoted_sender_user
+        SELECT mq.*, 
+               sender_j.raw_string as quoted_sender_jid,
+               sender_j.user as quoted_sender_user,
+               COALESCE(mapped_j.user, sender_j.user) as quoted_resolved_phone,
+               mapped_j._id as quoted_mapped_jid_id,
+               ldn.username as quoted_lid_username,
+               ldn.display_name as quoted_lid_display_name
         FROM message_quoted mq
         LEFT JOIN jid sender_j ON mq.sender_jid_row_id = sender_j._id
+        LEFT JOIN jid_map jm ON sender_j._id = jm.lid_row_id
+        LEFT JOIN jid mapped_j ON jm.jid_row_id = mapped_j._id
+        LEFT JOIN lid_display_name ldn ON sender_j._id = ldn.lid_row_id
         WHERE mq.message_row_id IN (${idPlaceholders})
       `).all(...ids)
       const quoteMap = new Map(quotes.map(q => [q.message_row_id, q]))
@@ -512,7 +624,7 @@ app.get('/api/session/:sessionId/chats/:chatId/messages', (req, res) => {
       `).all(...ids)
       const vcardMap = new Map(vcards.map(v => [v.message_row_id, v]))
 
-      // Hydrate messages
+      // Hydrate messages with complete name resolution
       const messages = rows.map(r => {
         const id = Number(r._id)
         const media = mediaMap.get(id)
@@ -536,7 +648,30 @@ app.get('/api/session/:sessionId/chats/:chatId/messages', (req, res) => {
         else if (t === 64) typeStr = 'poll'
         else if (t === 81) typeStr = 'call'
 
-        const senderName = r.from_me ? 'Siz' : (r.sender_resolved_phone || r.sender_user || r.sender_jid || 'Naməlum')
+        // Resolve author name from contactBook, lid_display_name, or phone number
+        let resolvedDisplayName = contactBook.get('jid_' + r.sender_jid_row_id)
+          || (r.mapped_jid_id ? contactBook.get('jid_' + r.mapped_jid_id) : null)
+          || (r.sender_resolved_phone ? contactBook.get(r.sender_resolved_phone) : null)
+          || (r.lid_display_name && !r.lid_display_name.includes('∙') ? r.lid_display_name : null)
+          || (r.lid_username ? '@' + r.lid_username : null)
+          || null
+
+        const senderPhone = r.sender_resolved_phone || (r.sender_server !== 'lid' ? r.sender_user : null)
+        const senderName = r.from_me 
+          ? 'Siz' 
+          : (resolvedDisplayName || senderPhone || (r.lid_username ? '@' + r.lid_username : null) || 'İştirakçı')
+
+        // Resolve quote author name
+        let quotedName = null
+        if (quote) {
+          quotedName = contactBook.get('jid_' + quote.sender_jid_row_id)
+            || (quote.quoted_mapped_jid_id ? contactBook.get('jid_' + quote.quoted_mapped_jid_id) : null)
+            || (quote.quoted_resolved_phone ? contactBook.get(quote.quoted_resolved_phone) : null)
+            || (quote.quoted_lid_display_name && !quote.quoted_lid_display_name.includes('∙') ? quote.quoted_lid_display_name : null)
+            || (quote.quoted_lid_username ? '@' + quote.quoted_lid_username : null)
+            || quote.quoted_resolved_phone
+            || 'İştirakçı'
+        }
 
         return {
           id: String(r._id),
@@ -546,15 +681,16 @@ app.get('/api/session/:sessionId/chats/:chatId/messages', (req, res) => {
           timestamp: normalizeTimestamp(r.timestamp),
           receivedTimestamp: normalizeTimestamp(r.received_timestamp),
           isOutgoing: Boolean(r.from_me),
-          status: r.status, // 0 = pending, 4 = sent, 5 = delivered, 13 = read
+          status: r.status,
           starred: Boolean(r.starred),
           body: r.text_data || '',
           type: typeStr,
           rawMessageType: r.message_type,
           sender: {
             name: senderName,
+            displayName: resolvedDisplayName,
             jid: r.sender_jid,
-            phoneNumber: r.sender_resolved_phone || r.sender_user
+            phoneNumber: senderPhone
           },
           media: media ? {
             filePath: media.file_path,
@@ -571,7 +707,8 @@ app.get('/api/session/:sessionId/chats/:chatId/messages', (req, res) => {
             rowId: quote.message_row_id,
             body: quote.text_data,
             senderJid: quote.quoted_sender_jid,
-            senderPhone: quote.quoted_sender_user,
+            senderPhone: quote.quoted_resolved_phone,
+            senderName: quotedName,
             fromMe: Boolean(quote.from_me)
           } : null,
           reactions: messageReactions,
@@ -587,7 +724,6 @@ app.get('/api/session/:sessionId/chats/:chatId/messages', (req, res) => {
         }
       })
 
-      // Check if there are older messages available
       const oldestId = rawRows[rawRows.length - 1]._id
       const newestId = rawRows[0]._id
       const hasMoreCheck = db.prepare('SELECT 1 FROM message WHERE chat_row_id = ? AND _id < ? LIMIT 1').get(chatId, oldestId)
@@ -611,7 +747,6 @@ app.get('/api/session/:sessionId/chats/:chatId/messages', (req, res) => {
 // All-Columns Raw Inspector Endpoints (Bütün Sütunlar)
 // -------------------------------------------------------------
 
-// Inspect all columns for a specific message row and related tables
 app.get('/api/session/:sessionId/messages/:messageId/raw', (req, res) => {
   const session = sessions.get(req.params.sessionId)
   if (!session) return res.status(404).send('Sessiya tapılmadı.')
@@ -623,19 +758,12 @@ app.get('/api/session/:sessionId/messages/:messageId/raw', (req, res) => {
     const messageRow = db.prepare('SELECT * FROM message WHERE _id = ?').get(messageId)
     if (!messageRow) return res.status(404).send('Mesaj tapılmadı.')
 
-    // Media row
     let mediaRow = null
-    try {
-      mediaRow = db.prepare('SELECT * FROM message_media WHERE message_row_id = ?').get(messageId)
-    } catch {}
+    try { mediaRow = db.prepare('SELECT * FROM message_media WHERE message_row_id = ?').get(messageId) } catch {}
 
-    // Quoted row
     let quotedRow = null
-    try {
-      quotedRow = db.prepare('SELECT * FROM message_quoted WHERE message_row_id = ?').get(messageId)
-    } catch {}
+    try { quotedRow = db.prepare('SELECT * FROM message_quoted WHERE message_row_id = ?').get(messageId) } catch {}
 
-    // Reactions
     let reactions = []
     try {
       reactions = db.prepare(`
@@ -647,31 +775,23 @@ app.get('/api/session/:sessionId/messages/:messageId/raw', (req, res) => {
       `).all(messageId)
     } catch {}
 
-    // Poll options
     let pollOptions = []
-    try {
-      pollOptions = db.prepare('SELECT * FROM message_poll_option WHERE message_row_id = ?').all(messageId)
-    } catch {}
+    try { pollOptions = db.prepare('SELECT * FROM message_poll_option WHERE message_row_id = ?').all(messageId) } catch {}
 
-    // Location
     let locationRow = null
-    try {
-      locationRow = db.prepare('SELECT * FROM message_location WHERE message_row_id = ?').get(messageId)
-    } catch {}
+    try { locationRow = db.prepare('SELECT * FROM message_location WHERE message_row_id = ?').get(messageId) } catch {}
 
-    // VCard
     let vcardRow = null
-    try {
-      vcardRow = db.prepare('SELECT * FROM message_vcard WHERE message_row_id = ?').get(messageId)
-    } catch {}
+    try { vcardRow = db.prepare('SELECT * FROM message_vcard WHERE message_row_id = ?').get(messageId) } catch {}
 
-    // Sender JID and mapping
     let senderJidRow = null
     let jidMapRow = null
+    let lidDisplayNameRow = null
     if (messageRow.sender_jid_row_id) {
       try {
         senderJidRow = db.prepare('SELECT * FROM jid WHERE _id = ?').get(messageRow.sender_jid_row_id)
         jidMapRow = db.prepare('SELECT * FROM jid_map WHERE lid_row_id = ?').get(messageRow.sender_jid_row_id)
+        lidDisplayNameRow = db.prepare('SELECT * FROM lid_display_name WHERE lid_row_id = ?').get(messageRow.sender_jid_row_id)
       } catch {}
     }
 
@@ -685,7 +805,8 @@ app.get('/api/session/:sessionId/messages/:messageId/raw', (req, res) => {
       location: locationRow,
       vcard: vcardRow,
       senderJid: senderJidRow,
-      jidMap: jidMapRow
+      jidMap: jidMapRow,
+      lidDisplayName: lidDisplayNameRow
     })
   } catch (err) {
     return res.status(500).send(err instanceof Error ? err.message : 'Xam sütunlar oxunarkən xəta baş verdi.')
@@ -720,7 +841,7 @@ app.get('/api/session/:sessionId/chats/:chatId/raw', (req, res) => {
   }
 })
 
-// List all tables in the SQLite database with row counts and schema
+// List all tables in the SQLite database
 app.get('/api/session/:sessionId/tables', (req, res) => {
   const session = sessions.get(req.params.sessionId)
   if (!session) return res.status(404).send('Sessiya tapılmadı.')
@@ -760,14 +881,10 @@ app.get('/api/session/:sessionId/table/:tableName', (req, res) => {
 
     const db = session.db
 
-    // Verify table exists
     const tableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = ?").get(tableName)
     if (!tableExists) return res.status(404).send('Cədvəl tapılmadı.')
 
-    // Get column info
     const columns = db.prepare(`PRAGMA table_info(${quoteIdentifier(tableName)})`).all()
-
-    // Row count
     const totalCount = Number(db.prepare(`SELECT COUNT(*) as c FROM ${quoteIdentifier(tableName)}`).get()?.c || 0)
 
     let rowsQuery = `SELECT * FROM ${quoteIdentifier(tableName)}`
@@ -800,7 +917,7 @@ app.get('/api/session/:sessionId/table/:tableName', (req, res) => {
   }
 })
 
-// Safe read-only SQL query runner for advanced inspections
+// Safe read-only SQL query runner
 app.post('/api/session/:sessionId/query', (req, res) => {
   const session = sessions.get(req.params.sessionId)
   if (!session) return res.status(404).send('Sessiya tapılmadı.')
@@ -821,7 +938,7 @@ app.post('/api/session/:sessionId/query', (req, res) => {
 
 // Cleanup expired sessions
 setInterval(() => {
-  const expiry = Date.now() - 2 * 60 * 60 * 1000 // 2 hours
+  const expiry = Date.now() - 2 * 60 * 60 * 1000
   for (const [sessionId, session] of sessions) {
     if (session.createdAt < expiry) {
       try { session.db.close() } catch {}

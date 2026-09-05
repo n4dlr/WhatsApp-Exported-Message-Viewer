@@ -58,7 +58,7 @@ body {
   user-select: none;
 }
 
-/* Authentic WhatsApp Chat Doodle Wallpaper (SVG Pattern Overlay) */
+/* Authentic WhatsApp Line-Art Doodle Wallpaper */
 .whatsapp-chat-bg {
   background-color: var(--wa-chat-bg);
   position: relative;
@@ -68,14 +68,14 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23ffffff' fill-opacity='0.035'%3E%3Cpath d='M20 20h10v10H20zM50 40c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10-10-4.5-10-10zm70 10c0-8.3-6.7-15-15-15s-15 6.7-15 15 6.7 15 15 15 15-6.7 15-15zm-20 70c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10-4.5-10-10-10zm-60 10h16v6H40zm80-30c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm-90 4h12v12H30zm60-60h14v14H90z'/%3E%3Ccircle cx='25' cy='75' r='6'/%3E%3Ccircle cx='135' cy='125' r='5'/%3E%3Ccircle cx='75' cy='145' r='7'/%3E%3Cpath d='M110 85l12 12-12 12zM15 125l10-10 10 10zM120 15l8 14h-16z'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='0.9' stroke-opacity='0.045' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 15h12v9H21l-3 3v-3h-3zM70 20c-5 0-9 4-9 9 0 7 9 13 9 13s9-6 9-13c0-5-4-9-9-9zM35 75a6 6 0 1 0 12 0 6 6 0 1 0-12 0M95 65l6 12-12-6zM15 95a5 5 0 0 1 10 0v5h-10zM80 100h15v8h-15zM50 45l8 4-4 8z'/%3E%3Cpath d='M100 15a4 4 0 1 1-8 0 4 4 0 1 1 8 0M60 85c0-4 3-7 7-7s7 3 7 7M10 50h8'/%3E%3C/g%3E%3C/svg%3E");
   background-repeat: repeat;
   pointer-events: none;
   z-index: 0;
 }
 
 .light-mode .whatsapp-chat-bg::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23000000' fill-opacity='0.04'%3E%3Cpath d='M20 20h10v10H20zM50 40c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10-10-4.5-10-10zm70 10c0-8.3-6.7-15-15-15s-15 6.7-15 15 6.7 15 15 15 15-6.7 15-15zm-20 70c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10-4.5-10-10-10zm-60 10h16v6H40zm80-30c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm-90 4h12v12H30zm60-60h14v14H90z'/%3E%3Ccircle cx='25' cy='75' r='6'/%3E%3Ccircle cx='135' cy='125' r='5'/%3E%3Ccircle cx='75' cy='145' r='7'/%3E%3Cpath d='M110 85l12 12-12 12zM15 125l10-10 10 10zM120 15l8 14h-16z'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23000000' stroke-width='0.9' stroke-opacity='0.05' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 15h12v9H21l-3 3v-3h-3zM70 20c-5 0-9 4-9 9 0 7 9 13 9 13s9-6 9-13c0-5-4-9-9-9zM35 75a6 6 0 1 0 12 0 6 6 0 1 0-12 0M95 65l6 12-12-6zM15 95a5 5 0 0 1 10 0v5h-10zM80 100h15v8h-15zM50 45l8 4-4 8z'/%3E%3Cpath d='M100 15a4 4 0 1 1-8 0 4 4 0 1 1 8 0M60 85c0-4 3-7 7-7s7 3 7 7M10 50h8'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Custom Smooth WhatsApp Scrollbars */
@@ -166,13 +166,13 @@ body {
 
 /* Quoted Reply Card Inside Bubbles */
 .wa-quote-card {
-  background-color: rgba(0, 0, 0, 0.18);
-  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
   border-left-width: 4px;
 }
 
 .light-mode .wa-quote-card {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.06);
 }
 
 /* Micro-animations */
@@ -190,45 +190,4 @@ body {
 }
 .animate-slide-left {
   animation: slideLeft 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes slideUp {
-  from { transform: translateY(8px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-.animate-slide-up {
-  animation: slideUp 0.2s ease-out;
-}
-
-/* Hide scrollbar for filter chips row */
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* WhatsApp Archived Chats Button */
-.wa-archived-btn {
-  background-color: var(--wa-panel-bg);
-  transition: background-color 0.12s;
-}
-.wa-archived-btn:hover {
-  background-color: var(--wa-hover);
-}
-
-/* Message text selection allowed */
-.message-text-selectable {
-  user-select: text;
-  -webkit-user-select: text;
-}
-
-/* Unread badge pulse animation */
-@keyframes pulseBadge {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
-.badge-pulse {
-  animation: pulseBadge 2s ease-in-out infinite;
 }
