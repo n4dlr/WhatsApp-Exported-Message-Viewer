@@ -19,21 +19,47 @@ Designed to be visually similar to WhatsApp Web without claiming to be official.
 
 ## Installation
 
-Requirements: Node.js 18+ and npm
+Requirements: Node.js 22+ and npm (native SQLite is used for large databases)
 
-1. Install dependencies
+### Linux quick start
 
-npm install
+```bash
+git clone https://github.com/n4dlr/WhatsApp-Exported-Message-Viewer.git
+cd WhatsApp-Exported-Message-Viewer
+./setup-linux.sh
+./start-linux.sh
+```
 
-2. Start frontend dev server
+Open `http://127.0.0.1:5173`. Press `Ctrl+C` to stop both the frontend and local encrypted-backup backend.
 
+Do not start only `npm run dev` for encrypted backups; the local backend must also be running. The combined `./start-linux.sh` command starts both services.
+
+If ports `3001` or `5173` are already occupied, `start-linux.sh` automatically selects the next available ports. You can also provide a starting port:
+
+```bash
+BACKEND_PORT=3002 ./start-linux.sh
+```
+
+The ports can be changed:
+
+```bash
+FRONTEND_PORT=5174 BACKEND_PORT=3002 ./scripts/start-linux.sh
+```
+
+### Manual setup
+
+```bash
+npm install --legacy-peer-deps
 npm run dev
+```
 
-3. (Optional) Start backend adapter for encrypted backups
+For encrypted backup imports, run the backend separately:
 
+```bash
 npm run start:backend
+```
 
-The backend listens on port 3001 by default and exposes POST /api/import/encrypted-backup which validates inputs but does not perform crypt15 decryption (see security notes below).
+The backend listens on port 3001 by default and exposes POST `/api/import/encrypted-backup`. It decrypts supported `.crypt15` backups locally using the supplied 64-character hex key.
 
 ## Production build
 

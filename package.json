@@ -2,12 +2,15 @@
   "name": "chatvault-viewer",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "ChatVault Viewer — local-first WhatsApp-style exported message viewer",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start:backend": "node backend/index.js"
+    "start:backend": "node backend/index.js",
+    "setup:linux": "bash setup-linux.sh",
+    "start:linux": "bash start-linux.sh"
   },
   "keywords": [],
   "author": "n4dlr",
@@ -20,7 +23,9 @@
     "react-virtual": "^2.10.4",
     "sql.js": "^1.8.0",
     "zustand": "^4.4.0",
-    "idb": "^7.1.1"
+    "idb": "^7.1.1",
+    "express": "^4.21.1",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "@types/react": "^18.0.28",

@@ -5,17 +5,23 @@ import { Message } from '../types/message'
 type ChatState = {
   conversations: Conversation[]
   messages: Message[]
+  remoteSessionId: string | null
+  totalMessages: number | null
   activeConversationId: string | null
   theme: 'light'|'dark'
   setConversations: (c:Conversation[])=>void
   setMessages: (m:Message[])=>void
   addMessages: (m:Message[])=>void
+  setRemoteSession: (id:string|null, total:number|null)=>void
   selectConversation: (id:string|null)=>void
+  setTheme: (theme:'light'|'dark')=>void
 }
 
 export const useChatStore = create<ChatState>((set)=>({
   conversations: [],
   messages: [],
+  remoteSessionId: null,
+  totalMessages: null,
   activeConversationId: null,
   theme: 'light',
   setConversations: (c)=>set((state)=>({
@@ -27,5 +33,7 @@ export const useChatStore = create<ChatState>((set)=>({
   setMessages: (m)=>set({messages:m}),
   addMessages: (m)=>set((s)=>({messages:[...s.messages,...m]}))
   ,
-  selectConversation: (id)=>set({activeConversationId:id})
+  setRemoteSession: (id, total)=>set({remoteSessionId:id, totalMessages:total}),
+  selectConversation: (id)=>set({activeConversationId:id}),
+  setTheme: (theme)=>set({theme})
 }))
