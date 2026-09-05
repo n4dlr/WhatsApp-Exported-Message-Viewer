@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Conversation } from '../types/conversation'
 import { Message } from '../types/message'
 

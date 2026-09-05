@@ -283,13 +283,14 @@ app.get('/api/session/:sessionId/chats', (req, res) => {
     const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200)
     const offset = Math.max(Number(req.query.offset) || 0, 0)
     const search = String(req.query.search || '').trim().toLowerCase()
-    const filter = String(req.query.filter || 'all').toLowerCase() // 'all' | 'unread' | 'groups'
+    const filter = String(req.query.filter || 'all').toLowerCase() // 'all' | 'unread' | 'groups' | 'archived'
+    const showArchived = req.query.showArchived === 'true'
 
     const db = session.db
     const schema = session.schema
 
     if (schema.type === 'modern') {
-      let filterClause = '1=1'
+      let filterClause = showArchived ? 'c.archived = 1' : 'COALESCE(c.archived, 0) = 0'
       const params = []
 
       if (filter === 'unread') {
@@ -366,17 +367,24 @@ app.get('/api/session/:sessionId/chats', (req, res) => {
         }
       })
 
+      // Get archived count for banner display
+      let archivedCount = 0
+      try {
+        archivedCount = Number(db.prepare("SELECT COUNT(*) as c FROM chat c JOIN jid j ON c.jid_row_id = j._id WHERE c.archived = 1").get()?.c || 0)
+      } catch {}
+
       return res.json({
         total,
         limit,
         offset,
         hasMore: offset + chats.length < total,
-        chats
+        chats,
+        archivedCount
       })
     }
 
     // Fallback for legacy or generic tables
-    return res.json({ total: 0, chats: [], hasMore: false })
+    return res.json({ total: 0, chats: [], hasMore: false, archivedCount: 0 })
   } catch (err) {
     console.error('Error fetching chats:', err)
     return res.status(500).send(err instanceof Error ? err.message : 'Çatlar yüklənərkən xəta baş verdi.')

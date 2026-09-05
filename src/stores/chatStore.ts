@@ -25,6 +25,8 @@ type ChatState = {
   isLoadingConversations: boolean
   chatFilter: ChatFilter
   chatSearchQuery: string
+  showArchived: boolean
+  archivedCount: number
 
   // Active chat state
   activeConversationId: string | null
@@ -55,6 +57,7 @@ type ChatState = {
   setIsTableExplorerOpen: (open: boolean) => void
   setIsChatDetailsOpen: (open: boolean) => void
   setIsImportCenterOpen: (open: boolean) => void
+  setShowArchived: (show: boolean) => void
 
   // Chat loading actions
   loadChats: (reset?: boolean) => Promise<void>
@@ -76,6 +79,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isLoadingConversations: false,
   chatFilter: 'all',
   chatSearchQuery: '',
+  showArchived: false,
+  archivedCount: 0,
 
   activeConversationId: null,
   messages: [],
@@ -133,9 +138,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setIsTableExplorerOpen: open => set({ isTableExplorerOpen: open }),
   setIsChatDetailsOpen: open => set({ isChatDetailsOpen: open }),
   setIsImportCenterOpen: open => set({ isImportCenterOpen: open }),
+  setShowArchived: (show) => {
+    set({ showArchived: show, conversationsOffset: 0 })
+    void get().loadChats(true)
+  },
 
   loadChats: async (reset = false) => {
-    const { remoteSessionId, chatFilter, chatSearchQuery, isLoadingConversations } = get()
+    const { remoteSessionId, chatFilter, chatSearchQuery, isLoadingConversations, showArchived } = get()
     if (!remoteSessionId || isLoadingConversations) return
 
     set({ isLoadingConversations: true })
@@ -146,7 +155,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         limit: String(limit),
         offset: String(offset),
         filter: chatFilter,
-        search: chatSearchQuery
+        search: chatSearchQuery,
+        showArchived: String(showArchived)
       })
 
       const res = await fetch(`${getBackendUrl()}/api/session/${remoteSessionId}/chats?${params.toString()}`)
@@ -177,7 +187,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
           conversationsOffset: offset + newChats.length,
           hasMoreConversations: data.hasMore,
           activeConversationId,
-          isLoadingConversations: false
+          isLoadingConversations: false,
+          ...(data.archivedCount !== undefined ? { archivedCount: Number(data.archivedCount) } : {})
         }
       })
 

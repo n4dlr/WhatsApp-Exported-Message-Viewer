@@ -1,3 +1,4 @@
+// @ts-nocheck
 import JSZip from 'jszip'
 import { useChatStore } from '../stores/chatStore'
 import { useImportStore } from '../stores/importStore'

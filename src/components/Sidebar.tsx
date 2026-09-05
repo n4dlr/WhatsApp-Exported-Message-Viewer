@@ -26,7 +26,10 @@ export default function Sidebar() {
     chatSearchQuery,
     setChatSearchQuery,
     setIsTableExplorerOpen,
-    setIsImportCenterOpen
+    setIsImportCenterOpen,
+    showArchived,
+    setShowArchived,
+    archivedCount
   } = useChatStore()
 
   const [menuOpen, setMenuOpen] = useState(false)
@@ -228,31 +231,33 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Filter Chips Pill Row */}
-      <div className="px-3 py-2 flex items-center gap-2 border-b text-[13px] overflow-x-auto no-scrollbar" style={{ borderColor: 'var(--wa-border)' }}>
-        {(['all', 'unread', 'groups'] as ChatFilter[]).map(filter => {
-          const labels: Record<ChatFilter, string> = {
-            all: 'Hamısı',
-            unread: 'Oxunmamış',
-            groups: 'Qruplar'
-          }
-          const isActive = chatFilter === filter
-          return (
-            <button
-              key={filter}
-              type="button"
-              onClick={() => setChatFilter(filter)}
-              className={`px-3 py-1 rounded-full text-xs transition-all flex-shrink-0 ${
-                isActive
-                  ? 'bg-[#00a884]/20 text-[var(--wa-green)] border border-[var(--wa-green)]/50 font-semibold shadow-sm'
-                  : 'bg-[var(--wa-search-bg)] text-[var(--wa-text-secondary)] hover:text-[var(--wa-text-primary)] border border-transparent'
-              }`}
-            >
-              {labels[filter]}
-            </button>
-          )
-        })}
-      </div>
+      {/* Filter Chips Pill Row — hidden when in archived mode */}
+      {!showArchived && (
+        <div className="px-3 py-2 flex items-center gap-2 border-b text-[13px] overflow-x-auto no-scrollbar" style={{ borderColor: 'var(--wa-border)' }}>
+          {(['all', 'unread', 'groups'] as ChatFilter[]).map(filter => {
+            const labels: Record<ChatFilter, string> = {
+              all: 'Hamısı',
+              unread: 'Oxunmamış',
+              groups: 'Qruplar'
+            }
+            const isActive = chatFilter === filter
+            return (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setChatFilter(filter)}
+                className={`px-3 py-1 rounded-full text-xs transition-all flex-shrink-0 ${
+                  isActive
+                    ? 'bg-[#00a884]/20 text-[var(--wa-green)] border border-[var(--wa-green)]/50 font-semibold shadow-sm'
+                    : 'bg-[var(--wa-search-bg)] text-[var(--wa-text-secondary)] hover:text-[var(--wa-text-primary)] border border-transparent'
+                }`}
+              >
+                {labels[filter]}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {/* Chat List */}
       <div className="flex-1 min-h-0">

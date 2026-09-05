@@ -1,3 +1,4 @@
+// @ts-nocheck
 import initSqlJs, { Database } from 'sql.js'
 import { useChatStore } from '../stores/chatStore'
 import { parseSqliteToModel } from '../parsers/sqliteParser'

@@ -336,7 +336,7 @@ export default function MessageBubble({
 
         {/* Text Message Body */}
         {message.type !== 'poll' && message.body && (
-          <div className="whitespace-pre-wrap break-words pr-12 text-[var(--wa-text-primary)]">
+          <div className="whitespace-pre-wrap break-words pr-12 text-[var(--wa-text-primary)] message-text-selectable">
             {renderFormattedText(message.body)}
           </div>
         )}
