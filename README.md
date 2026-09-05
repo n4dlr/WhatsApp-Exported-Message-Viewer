@@ -1,187 +1,58 @@
-📱 WhatsApp Mesaj Oxuyucu 
+# ChatVault Viewer
 
-WhatsApp Mesaj Oxuyucu — WhatsApp-dan ixrac edilmiş mesajları və media fayllarını tam oflayn, təhlükəsiz və WhatsApp-a bənzər interfeys ilə oxumaq üçün hazırlanmış veb tətbiqdir.
+ChatVault Viewer is a professional, local-first WhatsApp-style exported message viewer. It supports TXT/ZIP chat exports, SQLite msgstore databases, media ZIPs, a Database Inspector, virtualized message rendering, and an encrypted-backup adapter architecture for secure processing.
 
-Bu tətbiq heç bir serverə qoşulmur, heç bir məlumat göndərmir və bütün emal prosesi istifadəçinin cihazında baş verir. Məxfilik burada boş söz deyil, memarlıq qərarıdır.
+This repository is a full rewrite intended to be a maintainable, modular foundation.
 
+## Features
+- Import TXT chat exports and ZIP archives
+- Open SQLite databases (msgstore.db) using sql.js (WASM)
+- Database Inspector with read-only SQL exploration
+- Virtualized message list for large conversations
+- Media mapping from ZIP archives
+- IndexedDB-backed session tracking
+- Local-first design — no data is uploaded by default
+- Backend adapter scaffold for encrypted backups (/backend)
 
----
+## UI
+Designed to be visually similar to WhatsApp Web without claiming to be official. The app is named ChatVault Viewer.
 
-✨ Əsas Xüsusiyyətlər
+## Installation
 
-📦 ZIP fayl dəstəyi
-WhatsApp ixracından çıxan .zip faylını yükləyin, tətbiq avtomatik analiz etsin.
+Requirements: Node.js 18+ and npm
 
-💬 WhatsApp stili interfeys
-Mesajlar real WhatsApp görünüşündə göstərilir (sağ / sol balonlar, tarixlər, zamanlar).
+1. Install dependencies
 
-🌙 Gecə və Gündüz rejimi
-İstifadəçi istədiyi vaxt tema dəyişə bilər.
+npm install
 
-🔍 Mesaj axtarışı
-Mesajlar arasında söz və ya ifadə üzrə axtarış edin və nəticələr arasında rahat keçid edin.
+2. Start frontend dev server
 
-👤 İstifadəçi seçimi
-Hansı mesajların “mənim mesajlarım” olduğunu seçin.
+npm run dev
 
-📄 Saxlanmış ZIP faylları
-Əvvəllər yüklənmiş WhatsApp ixraclarını siyahıdan yenidən açın.
+3. (Optional) Start backend adapter for encrypted backups
 
-🌍 Çoxdilli dəstək
-Tətbiq 12 fərqli dili dəstəkləyir.
+npm run start:backend
 
-🖋️ Font və ölçü ayarları
-Yazı növünü və ölçüsünü öz zövqünüzə görə tənzimləyin.
+The backend listens on port 3001 by default and exposes POST /api/import/encrypted-backup which validates inputs but does not perform crypt15 decryption (see security notes below).
 
-📱 Responsiv dizayn
-Mobil telefon, planşet və masaüstü cihazlarda problemsiz işləyir.
+## Production build
 
-🔒 Tam məxfilik
-Bütün məlumatlar yalnız localStorage-da saxlanılır. Server yoxdur, izləmə yoxdur.
+npm run build
 
+To preview the build:
 
+npm run preview
 
----
+## Security & Privacy
+- Local-first: files are processed in the browser wherever possible.
+- Encrypted backup processing is explicitly handled by the backend adapter only if you run it locally. The adapter validates key material but does not implement crypt15 decryption. This avoids guessing/brute force and avoids sending private data to third-party servers.
+- XSS safety: message HTML is escaped before rendering; media URLs are object URLs created from local files.
 
-🚀 İstifadə Qaydası
+## Notes on encrypted backups
+Handling WhatsApp encrypted backups (crypt12/14/15) requires format-specific keys and careful cryptographic implementations. This project provides a secure adapter API for local/back-end processing but intentionally does not implement untrusted decryption. If you have a decrypted `msgstore.db`, import it directly.
 
-1. WhatsApp-da söhbəti ixrac edin
-WhatsApp > Söhbət > Daha çox > İxrac söhbəti
+## Project structure
+See `src/` for components, services, parsers, stores, types, and workers.
 
-
-2. Alınan .zip faylını tətbiqdə “ZIP fayl seç…” düyməsi ilə yükləyin.
-
-
-3. Mesajlar avtomatik olaraq WhatsApp interfeysində göstəriləcək.
-
-
-4. “İstifadəçi seç…” menyusundan hansı mesajların sizə aid olduğunu seçin.
-
-
-5. Yuxarı paneldən:
-
-Axtarış
-
-Tema
-
-Dil
-
-Font və ölçü
-ayarlarını dəyişə bilərsiniz.
-
-
-
-
-
----
-
-⚙️ Ayarlar
-
-Dil dəstəyi (12 dil):
-
-Azərbaycan
-
-İngilis
-
-Rus
-
-Türk
-
-Çin
-
-Alman
-
-Fransız
-
-İspan
-
-Ərəb
-
-Portuqal
-
-Hind
-
-Yapon
-
-
-Yazı növləri:
-
-Segoe UI
-
-Georgia
-
-Courier New
-
-Times New Roman
-
-
-Yazı ölçüləri:
-
-Kiçik
-
-Orta
-
-Böyük
-
-Çox böyük
-
-
-Tema:
-
-Gündüz (Light)
-
-Gecə (Dark)
-
-
-
----
-
-📁 Saxlanılan Məlumatlar
-
-Tətbiq yalnız aşağıdakı məlumatları localStorage-da saxlayır:
-
-Seçilmiş tema (light / dark)
-
-Seçilmiş dil
-
-Yazı növü və ölçüsü
-
-Əvvəllər yüklənmiş ZIP faylları (Base64 formatında)
-
-
-📌 Qeyd:
-Heç bir məlumat internetə göndərilmir və server tərəfi yoxdur.
-
-
----
-
-🛠️ İstifadə Olunan Texnologiyalar
-
-HTML5
-
-CSS3
-
-JavaScript (Vanilla)
-
-JSZip – ZIP fayllarını oxumaq üçün
-
-LocalStorage – istifadəçi seçimlərini saxlamaq üçün
-
-Responsiv CSS – mobil uyğunluq üçün
-
-
-
----
-
-👨‍💻 Müəllif
-
-Nadir Nəcəfzadə
-📧 Email: nadirnecefzadenadirnecefzade@gmail.com
-
-
----
-
-📄 Lisenziya
-
-Bu layihə açıq mənbəlidir və pulsuz istifadə oluna bilər.
-
+## Contributing
+This is a personal project scaffold. If you build features, ensure they are implemented locally and follow the privacy-first principles.
