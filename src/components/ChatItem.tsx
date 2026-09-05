@@ -1,80 +1,94 @@
 import React from 'react'
 import { Conversation } from '../types/conversation'
 import { useChatStore } from '../stores/chatStore'
-import { Check, CheckCheck, Users, Archive } from 'lucide-react'
-
-// Deterministic WhatsApp avatar colors based on chat ID/name
-const AVATAR_COLORS = [
-  '#00a884', '#53bdeb', '#e542a3', '#f28b22', '#a476f7', '#d69800', '#26a69a', '#ef5350'
-]
-
-function getAvatarColor(str: string): string {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
-}
-
-function formatWhatsAppTime(timestamp?: number | null): string {
-  if (!timestamp) return ''
-  const date = new Date(timestamp)
-  const now = new Date()
-
-  const isToday = date.toDateString() === now.toDateString()
-  if (isToday) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
-  }
-
-  const yesterday = new Date(now)
-  yesterday.setDate(now.getDate() - 1)
-  if (date.toDateString() === yesterday.toDateString()) {
-    return 'Dünən'
-  }
-
-  return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`
-}
+import {
+  formatPhoneNumber,
+  formatWhatsAppTime,
+  getParticipantColor
+} from '../utils/formatters'
+import {
+  Check,
+  CheckCheck,
+  Users,
+  Archive,
+  Camera,
+  Mic,
+  Video,
+  FileText,
+  Smile
+} from 'lucide-react'
 
 export default function ChatItem({ conversation }: { conversation: Conversation }) {
   const { activeConversationId, selectConversation } = useChatStore()
   const isSelected = conversation.id === activeConversationId
 
-  const initials = (conversation.name || 'W')
+  const displayName = conversation.isGroup
+    ? (conversation.name || 'Qrup Söhbəti')
+    : (formatPhoneNumber(conversation.phoneNumber) || conversation.name || 'Söhbət')
+
+  const initials = displayName
     .replace(/[^\p{L}\p{N}\s]/gu, '')
     .trim()
     .slice(0, 2)
     .toUpperCase() || 'W'
 
-  const avatarBg = getAvatarColor(conversation.id + (conversation.name || ''))
+  const avatarBg = getParticipantColor(conversation.id + (conversation.name || ''))
   const lastMsg = conversation.lastMessage
   const timeFormatted = formatWhatsAppTime(conversation.lastTimestamp)
+
+  // Media icon inside last message snippet
+  const renderMediaIcon = () => {
+    if (!lastMsg) return null
+    const t = lastMsg.type
+    if (t === 1) return <Camera size={14} className="text-[var(--wa-text-secondary)] inline mr-1" />
+    if (t === 2) return <Mic size={14} className="text-[var(--wa-text-secondary)] inline mr-1" />
+    if (t === 3) return <Video size={14} className="text-[var(--wa-text-secondary)] inline mr-1" />
+    if (t === 9) return <FileText size={14} className="text-[var(--wa-text-secondary)] inline mr-1" />
+    if (t === 20 || t === 15) return <Smile size={14} className="text-[var(--wa-text-secondary)] inline mr-1" />
+    return null
+  }
 
   return (
     <button
       type="button"
       onClick={() => void selectConversation(conversation.id)}
-      className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-colors border-b border-opacity-50 cursor-pointer ${
+      className={`w-full text-left px-3.5 py-3 flex items-center gap-3 transition-colors border-b cursor-pointer select-none relative group ${
         isSelected
-          ? 'bg-[#2a3942] dark:bg-[#2a3942]'
-          : 'hover:bg-[#202c33]/40'
+          ? 'bg-[#2a3942]'
+          : 'hover:bg-[#202c33]/50'
       }`}
       style={{ borderBottomColor: 'var(--wa-border)' }}
     >
+      {/* Active Indicator Left Bar */}
+      {isSelected && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--wa-green)]" />
+      )}
+
       {/* Avatar */}
       <div
         className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-white font-medium text-base shadow-sm relative"
         style={{ backgroundColor: avatarBg }}
       >
-        {conversation.isGroup ? <Users size={22} className="text-white/90" /> : initials}
+        {conversation.isGroup ? (
+          <Users size={22} className="text-white/95" />
+        ) : (
+          <span>{initials}</span>
+        )}
       </div>
 
       {/* Main Info */}
       <div className="flex-1 min-w-0 pr-1">
         <div className="flex justify-between items-baseline mb-1">
           <div className="font-normal text-[16px] text-[var(--wa-text-primary)] truncate font-sans">
-            {conversation.name}
+            {displayName}
           </div>
-          <span className={`text-[12px] flex-shrink-0 ml-2 ${conversation.unreadCount && conversation.unreadCount > 0 ? 'text-[var(--wa-green)] font-medium' : 'text-[var(--wa-text-secondary)]'}`}>
+          <span
+            className={`text-[12px] flex-shrink-0 ml-2 font-mono ${
+              conversation.unreadCount && conversation.unreadCount > 0
+                ? 'text-[var(--wa-green)] font-semibold'
+                : 'text-[var(--wa-text-secondary)]'
+            }`}
+          >
             {timeFormatted}
           </span>
         </div>
@@ -92,6 +106,7 @@ export default function ChatItem({ conversation }: { conversation: Conversation 
                 )}
               </span>
             )}
+            {renderMediaIcon()}
             <span className="truncate">
               {lastMsg?.text || (conversation.isGroup ? 'Qrup söhbəti' : 'Söhbət')}
             </span>
@@ -102,7 +117,7 @@ export default function ChatItem({ conversation }: { conversation: Conversation 
               <Archive size={14} className="text-[var(--wa-text-secondary)] opacity-70" />
             )}
             {conversation.unreadCount != null && conversation.unreadCount > 0 && (
-              <span className="bg-[var(--wa-green)] text-[#111b21] font-semibold text-[11px] min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center">
+              <span className="bg-[var(--wa-green)] text-[#111b21] font-bold text-[11px] min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center shadow-sm">
                 {conversation.unreadCount > 999 ? '999+' : conversation.unreadCount}
               </span>
             )}

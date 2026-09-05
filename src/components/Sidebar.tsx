@@ -10,7 +10,10 @@ import {
   Filter,
   MoreVertical,
   FolderOpen,
-  Users
+  MessageSquarePlus,
+  CircleDashed,
+  Users2,
+  Newspaper
 } from 'lucide-react'
 
 export default function Sidebar() {
@@ -49,35 +52,68 @@ export default function Sidebar() {
           borderColor: 'var(--wa-border)'
         }}
       >
-        {/* User Avatar & DB Stats Badge */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center text-white font-bold text-sm shadow-sm cursor-pointer hover:opacity-90 transition-opacity">
+        {/* User Avatar & DB Title */}
+        <div className="flex items-center gap-3 min-w-0 pr-2">
+          <div
+            className="w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center text-white font-bold text-sm shadow-sm cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
+            title="İstifadəçi Profili"
+          >
             WA
           </div>
           {stats && (
-            <div className="flex flex-col">
-              <span className="text-[13.5px] font-semibold text-[var(--wa-text-primary)] leading-tight truncate max-w-[140px]">
+            <div className="flex flex-col min-w-0">
+              <span
+                className="text-[13.5px] font-semibold text-[var(--wa-text-primary)] leading-tight truncate"
+                title={stats.fileName}
+              >
                 {stats.fileName}
               </span>
-              <span className="text-[11.5px] text-[var(--wa-text-secondary)]">
+              <span className="text-[11px] text-[var(--wa-text-secondary)] truncate">
                 {(stats.totalMessages / 1000).toFixed(0)}k mesaj • {stats.totalChats} çat
               </span>
             </div>
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-1 text-[var(--wa-text-secondary)]">
-          {/* Database Inspector / Table Explorer */}
+        {/* Header Action Icons */}
+        <div className="flex items-center gap-0.5 text-[var(--wa-text-secondary)] flex-shrink-0">
+          {/* Communities */}
           <button
             type="button"
-            title="Bütün Cədvəllərə və Sxemə Bax (Database Explorer)"
+            title="İcmalar (Communities)"
+            className="p-2 rounded-full hover:bg-[var(--wa-hover)] hover:text-[var(--wa-text-primary)] transition-colors opacity-80 hover:opacity-100"
+          >
+            <Users2 size={19} />
+          </button>
+
+          {/* Status */}
+          <button
+            type="button"
+            title="Status"
+            className="p-2 rounded-full hover:bg-[var(--wa-hover)] hover:text-[var(--wa-text-primary)] transition-colors opacity-80 hover:opacity-100"
+          >
+            <CircleDashed size={19} />
+          </button>
+
+          {/* Channels */}
+          <button
+            type="button"
+            title="Kanallar"
+            className="p-2 rounded-full hover:bg-[var(--wa-hover)] hover:text-[var(--wa-text-primary)] transition-colors opacity-80 hover:opacity-100"
+          >
+            <Newspaper size={19} />
+          </button>
+
+          {/* Database Explorer Button */}
+          <button
+            type="button"
+            title="Baza Cədvəlləri və Sxem (Database Explorer)"
             onClick={() => setIsTableExplorerOpen(true)}
             className="p-2 rounded-full hover:bg-[var(--wa-hover)] hover:text-[var(--wa-text-primary)] transition-colors relative"
           >
-            <Database size={20} />
+            <Database size={19} />
             {stats && stats.totalTables && (
-              <span className="absolute -top-1 -right-1 bg-[var(--wa-green)] text-[#111b21] text-[9px] font-bold px-1 rounded-full">
+              <span className="absolute 0 top-0.5 right-0.5 bg-[var(--wa-green)] text-[#111b21] text-[9px] font-bold px-1 rounded-full shadow">
                 {stats.totalTables}
               </span>
             )}
@@ -86,37 +122,27 @@ export default function Sidebar() {
           {/* Theme Toggle */}
           <button
             type="button"
-            title={theme === 'dark' ? 'İşıqlı rejimə keç' : 'Qaranlıq rejimə keç'}
+            title={theme === 'dark' ? 'İşıqlı rejim' : 'Qaranlıq rejim'}
             onClick={toggleTheme}
             className="p-2 rounded-full hover:bg-[var(--wa-hover)] hover:text-[var(--wa-text-primary)] transition-colors"
           >
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-
-          {/* Import / Change DB */}
-          <button
-            type="button"
-            title="Başqa Baza / Fayl Aç"
-            onClick={() => setIsImportCenterOpen(true)}
-            className="p-2 rounded-full hover:bg-[var(--wa-hover)] hover:text-[var(--wa-text-primary)] transition-colors"
-          >
-            <FolderOpen size={20} />
+            {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
           </button>
 
           {/* 3-dots Menu */}
           <div className="relative">
             <button
               type="button"
-              title="Menyu"
+              title="Seçimlər menyusu"
               onClick={() => setMenuOpen(!menuOpen)}
               className="p-2 rounded-full hover:bg-[var(--wa-hover)] hover:text-[var(--wa-text-primary)] transition-colors"
             >
-              <MoreVertical size={20} />
+              <MoreVertical size={19} />
             </button>
 
             {menuOpen && (
               <div
-                className="absolute right-0 mt-2 w-52 py-2 rounded-lg shadow-xl z-50 text-sm animate-fade-in border"
+                className="absolute right-0 mt-2 w-56 py-2 rounded-lg shadow-2xl z-50 text-sm animate-fade-in border"
                 style={{
                   backgroundColor: 'var(--wa-header-bg)',
                   borderColor: 'var(--wa-border)'
@@ -163,12 +189,12 @@ export default function Sidebar() {
       </div>
 
       {/* WhatsApp Search Bar */}
-      <div className="p-2 border-b flex items-center gap-2" style={{ borderColor: 'var(--wa-border)' }}>
+      <div className="px-3 py-2 border-b flex items-center gap-2" style={{ borderColor: 'var(--wa-border)' }}>
         <div
-          className="flex-1 flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-all"
+          className="flex-1 flex items-center gap-3 px-3.5 py-1.5 rounded-lg text-sm transition-all focus-within:ring-1 focus-within:ring-[var(--wa-green)]/40"
           style={{ backgroundColor: 'var(--wa-search-bg)' }}
         >
-          <Search size={17} className="text-[var(--wa-text-secondary)] flex-shrink-0" />
+          <Search size={16} className="text-[var(--wa-text-secondary)] flex-shrink-0" />
           <input
             type="text"
             value={chatSearchQuery}
@@ -182,15 +208,15 @@ export default function Sidebar() {
               onClick={() => setChatSearchQuery('')}
               className="text-[var(--wa-text-secondary)] hover:text-[var(--wa-text-primary)]"
             >
-              <X size={16} />
+              <X size={15} />
             </button>
           )}
         </div>
 
-        {/* Unread Filter Toggle */}
+        {/* Unread Filter Toggle Button */}
         <button
           type="button"
-          title="Oxunmamış söhbətlər"
+          title="Oxunmamış söhbətlər filtri"
           onClick={() => setChatFilter(chatFilter === 'unread' ? 'all' : 'unread')}
           className={`p-2 rounded-lg transition-colors ${
             chatFilter === 'unread'
@@ -198,12 +224,12 @@ export default function Sidebar() {
               : 'text-[var(--wa-text-secondary)] hover:bg-[var(--wa-hover)]'
           }`}
         >
-          <Filter size={18} />
+          <Filter size={17} />
         </button>
       </div>
 
-      {/* Filter Pills Row */}
-      <div className="px-3 py-1.5 flex items-center gap-2 border-b text-[13px]" style={{ borderColor: 'var(--wa-border)' }}>
+      {/* Filter Chips Pill Row */}
+      <div className="px-3 py-2 flex items-center gap-2 border-b text-[13px] overflow-x-auto no-scrollbar" style={{ borderColor: 'var(--wa-border)' }}>
         {(['all', 'unread', 'groups'] as ChatFilter[]).map(filter => {
           const labels: Record<ChatFilter, string> = {
             all: 'Hamısı',
@@ -216,10 +242,10 @@ export default function Sidebar() {
               key={filter}
               type="button"
               onClick={() => setChatFilter(filter)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              className={`px-3 py-1 rounded-full text-xs transition-all flex-shrink-0 ${
                 isActive
-                  ? 'bg-[#00a884]/20 text-[var(--wa-green)] border border-[var(--wa-green)]/40 font-semibold'
-                  : 'bg-[var(--wa-search-bg)] text-[var(--wa-text-secondary)] hover:text-[var(--wa-text-primary)]'
+                  ? 'bg-[#00a884]/20 text-[var(--wa-green)] border border-[var(--wa-green)]/50 font-semibold shadow-sm'
+                  : 'bg-[var(--wa-search-bg)] text-[var(--wa-text-secondary)] hover:text-[var(--wa-text-primary)] border border-transparent'
               }`}
             >
               {labels[filter]}

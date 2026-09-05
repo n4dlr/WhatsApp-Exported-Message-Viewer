@@ -18,10 +18,8 @@
   --wa-green-hover: #06cf9c;
   --wa-bubble-out: #005c4b;
   --wa-bubble-in: #202c33;
-  --wa-bubble-tail-out: #005c4b;
-  --wa-bubble-tail-in: #202c33;
   --wa-blue-check: #53bdeb;
-  --wa-system-pill: rgba(24, 34, 41, 0.85);
+  --wa-system-pill: rgba(24, 34, 41, 0.9);
   --wa-modal-bg: #1e2a30;
   --wa-scrollbar: rgba(255, 255, 255, 0.16);
 }
@@ -42,8 +40,6 @@
   --wa-green-hover: #017560;
   --wa-bubble-out: #d9fdd3;
   --wa-bubble-in: #ffffff;
-  --wa-bubble-tail-out: #d9fdd3;
-  --wa-bubble-tail-in: #ffffff;
   --wa-blue-check: #53bdeb;
   --wa-system-pill: rgba(255, 255, 255, 0.95);
   --wa-modal-bg: #ffffff;
@@ -62,21 +58,24 @@ body {
   user-select: none;
 }
 
-/* Authentic WhatsApp Chat Doodle Wallpaper Overlay */
+/* Authentic WhatsApp Chat Doodle Wallpaper (SVG Pattern Overlay) */
 .whatsapp-chat-bg {
   background-color: var(--wa-chat-bg);
-  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-  background-position: 0 0, 20px 20px;
+  position: relative;
 }
 
-.light-mode .whatsapp-chat-bg {
-  background-color: var(--wa-chat-bg);
-  background-image: radial-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-    radial-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-  background-position: 0 0, 20px 20px;
+.whatsapp-chat-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23ffffff' fill-opacity='0.035'%3E%3Cpath d='M20 20h10v10H20zM50 40c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10-10-4.5-10-10zm70 10c0-8.3-6.7-15-15-15s-15 6.7-15 15 6.7 15 15 15 15-6.7 15-15zm-20 70c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10-4.5-10-10-10zm-60 10h16v6H40zm80-30c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm-90 4h12v12H30zm60-60h14v14H90z'/%3E%3Ccircle cx='25' cy='75' r='6'/%3E%3Ccircle cx='135' cy='125' r='5'/%3E%3Ccircle cx='75' cy='145' r='7'/%3E%3Cpath d='M110 85l12 12-12 12zM15 125l10-10 10 10zM120 15l8 14h-16z'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.light-mode .whatsapp-chat-bg::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cg fill='%23000000' fill-opacity='0.04'%3E%3Cpath d='M20 20h10v10H20zM50 40c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10-10-4.5-10-10zm70 10c0-8.3-6.7-15-15-15s-15 6.7-15 15 6.7 15 15 15 15-6.7 15-15zm-20 70c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10-4.5-10-10-10zm-60 10h16v6H40zm80-30c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm-90 4h12v12H30zm60-60h14v14H90z'/%3E%3Ccircle cx='25' cy='75' r='6'/%3E%3Ccircle cx='135' cy='125' r='5'/%3E%3Ccircle cx='75' cy='145' r='7'/%3E%3Cpath d='M110 85l12 12-12 12zM15 125l10-10 10 10zM120 15l8 14h-16z'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Custom Smooth WhatsApp Scrollbars */
@@ -98,64 +97,83 @@ body {
   background: rgba(0, 0, 0, 0.35);
 }
 
-/* Outgoing Message Bubble with WhatsApp Tail */
+/* Outgoing Message Bubble with WhatsApp SVG Tail */
 .bubble-outgoing {
   background-color: var(--wa-bubble-out);
   color: var(--wa-text-primary);
-  border-radius: 7.5px;
-  border-top-right-radius: 0px;
+  border-radius: 8px;
   position: relative;
-  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.15);
 }
 
-.bubble-outgoing::after {
+.bubble-outgoing.has-tail {
+  border-top-right-radius: 0px;
+}
+
+.bubble-outgoing.has-tail::after {
   content: "";
   position: absolute;
   top: 0;
   right: -8px;
   width: 8px;
   height: 13px;
-  background: radial-gradient(circle at top left, transparent 8px, var(--wa-bubble-tail-out) 8.5px);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 13'%3E%3Cpath opacity='0.15' d='M5.188 1H0v11.193l6.467-8.625C7.526 2.156 6.958 1 5.188 1z'/%3E%3Cpath fill='%23005c4b' d='M5.188 0H0v11.193l6.467-8.625C7.526 1.156 6.958 0 5.188 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 
-/* Incoming Message Bubble with WhatsApp Tail */
+.light-mode .bubble-outgoing.has-tail::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 13'%3E%3Cpath opacity='0.15' d='M5.188 1H0v11.193l6.467-8.625C7.526 2.156 6.958 1 5.188 1z'/%3E%3Cpath fill='%23d9fdd3' d='M5.188 0H0v11.193l6.467-8.625C7.526 1.156 6.958 0 5.188 0z'/%3E%3C/svg%3E");
+}
+
+/* Incoming Message Bubble with WhatsApp SVG Tail */
 .bubble-incoming {
   background-color: var(--wa-bubble-in);
   color: var(--wa-text-primary);
-  border-radius: 7.5px;
-  border-top-left-radius: 0px;
+  border-radius: 8px;
   position: relative;
-  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.15);
 }
 
-.bubble-incoming::before {
+.bubble-incoming.has-tail {
+  border-top-left-radius: 0px;
+}
+
+.bubble-incoming.has-tail::before {
   content: "";
   position: absolute;
   top: 0;
   left: -8px;
   width: 8px;
   height: 13px;
-  background: radial-gradient(circle at top right, transparent 8px, var(--wa-bubble-tail-in) 8.5px);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 13'%3E%3Cpath opacity='0.15' d='M2.812 1H8v11.193L1.533 3.568C.474 2.156 1.042 1 2.812 1z'/%3E%3Cpath fill='%23202c33' d='M2.812 0H8v11.193L1.533 2.568C.474 1.156 1.042 0 2.812 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.light-mode .bubble-incoming.has-tail::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 13'%3E%3Cpath opacity='0.15' d='M2.812 1H8v11.193L1.533 3.568C.474 2.156 1.042 1 2.812 1z'/%3E%3Cpath fill='%23ffffff' d='M2.812 0H8v11.193L1.533 2.568C.474 1.156 1.042 0 2.812 0z'/%3E%3C/svg%3E");
 }
 
 /* System Encryption & Date Pill */
 .wa-pill {
   background-color: var(--wa-system-pill);
   color: var(--wa-text-secondary);
-  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
-  font-size: 12.5px;
-  line-height: 21px;
+  box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.15);
+  font-size: 12px;
+  line-height: 20px;
 }
 
-/* Participant Colors in Group Chats */
-.participant-color-0 { color: #53bdeb; }
-.participant-color-1 { color: #e542a3; }
-.participant-color-2 { color: #00a884; }
-.participant-color-3 { color: #f28b22; }
-.participant-color-4 { color: #a476f7; }
-.participant-color-5 { color: #d69800; }
-.participant-color-6 { color: #ef5350; }
-.participant-color-7 { color: #26a69a; }
+/* Quoted Reply Card Inside Bubbles */
+.wa-quote-card {
+  background-color: rgba(0, 0, 0, 0.18);
+  border-radius: 5px;
+  border-left-width: 4px;
+}
+
+.light-mode .wa-quote-card {
+  background-color: rgba(0, 0, 0, 0.05);
+}
 
 /* Micro-animations */
 @keyframes fadeIn {
