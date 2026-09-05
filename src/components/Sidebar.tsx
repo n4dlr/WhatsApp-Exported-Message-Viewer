@@ -16,10 +16,6 @@ export default function Sidebar(){
         <div className="p-2 rounded hover:bg-gray-100 cursor-pointer">⋮</div>
       </div>
 
-      <div className="p-3 border-b">
-        <input placeholder="Search or start new chat" className="w-full p-2 rounded bg-gray-100" />
-      </div>
-
       <div className="flex-1 overflow-auto">
         <ChatList />
       </div>

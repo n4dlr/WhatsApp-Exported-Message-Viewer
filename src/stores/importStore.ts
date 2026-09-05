@@ -16,6 +16,7 @@ type ImportState = {
   importFile: (f:File)=>Promise<void>
   setProgress: (p:number)=>void
   setStatus: (s:string)=>void
+  completeSession: (session:ImportSession)=>void
 }
 
 export const useImportStore = create<ImportState>((set)=>({
@@ -26,5 +27,10 @@ export const useImportStore = create<ImportState>((set)=>({
   status:'idle',
   importFile: async (f:File)=>{},
   setProgress: (p)=>set({progress:p}),
-  setStatus: (s)=>set({status:s})
+  setStatus: (s)=>set({status:s}),
+  completeSession: (session)=>set((state)=>({
+    hasSession:true,
+    sessionCount: state.sessionCount + 1,
+    openSessions: [session, ...state.openSessions.filter(item => item.sessionId !== session.sessionId)]
+  }))
 }))

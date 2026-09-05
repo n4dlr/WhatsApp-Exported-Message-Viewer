@@ -1,14 +1,14 @@
-import { Message, Conversation } from '../types/message'
-import { Database } from 'sql.js'
+import { Conversation } from '../types/conversation'
+import { Message } from '../types/message'
 
-export function parseSqliteToModel(db:any): {conversations: any[], messages:any[]}{
+export function parseSqliteToModel(db:any): {conversations: Conversation[], messages: Message[]}{
   // schema detection: look for common tables: messages, chat_list, chats, wa_contacts
   const tables = db.exec("SELECT name FROM sqlite_master WHERE type='table'")
   const tableNames = (tables[0]?.values||[]).map((v:any)=>v[0].toLowerCase())
 
   // try messages table
-  let messages: any[] = []
-  let conversations: any[] = []
+  const messages: Message[] = []
+  let conversations: Conversation[] = []
 
   if(tableNames.includes('messages')){
     const res = db.exec('SELECT * FROM messages LIMIT 500')
@@ -20,8 +20,8 @@ export function parseSqliteToModel(db:any): {conversations: any[], messages:any[
         const msg:any = {
           id: obj._id?.toString() ?? obj.key_id?.toString() ?? cryptoRandomId(),
           conversationId: obj.key_remote_jid ?? obj.remote_jid ?? obj.chat_id ?? 'unknown',
-          senderName: obj.remote_resource ?? obj.key_from_me ? 'You' : obj.remote_resource ?? obj.remote_jid,
-          timestamp: (obj.timestamp || obj.timestamp_ms || obj.data ? (Number(obj.timestamp)||Number(obj.timestamp_ms) || Date.now() ) : Date.now()),
+          senderName: obj.key_from_me || obj.from_me ? 'You' : (obj.remote_resource ?? obj.remote_jid),
+          timestamp: normalizeTimestamp(obj.timestamp ?? obj.timestamp_ms),
           body: obj.data ?? obj.message ?? obj.text ?? '',
           isOutgoing: !!(obj.key_from_me || obj.from_me),
           type: 'text'
@@ -42,7 +42,7 @@ export function parseSqliteToModel(db:any): {conversations: any[], messages:any[
             id: cryptoRandomId(),
             conversationId: String(obj.chat_id || obj.thread_id || obj.remote_jid || t),
             senderName: obj.sender || obj.from || 'unknown',
-            timestamp: Number(obj.timestamp) || Date.now(),
+            timestamp: normalizeTimestamp(obj.timestamp),
             body: obj.text || obj.data || obj.message || '',
             isOutgoing: false,
             type: 'text'
@@ -54,12 +54,13 @@ export function parseSqliteToModel(db:any): {conversations: any[], messages:any[
   }
 
   // simple conversation list from message groups
-  const convMap: Record<string, any> = {}
+  const convMap: Record<string, Conversation> = {}
   for(const m of messages){
-    if(!convMap[m.conversationId]) convMap[m.conversationId] = {id:m.conversationId, name: m.conversationId, lastMessage: m, lastTimestamp: m.timestamp}
-    else if(m.timestamp > convMap[m.conversationId].lastTimestamp){
-      convMap[m.conversationId].lastMessage = m
-      convMap[m.conversationId].lastTimestamp = m.timestamp
+    const conversation = convMap[m.conversationId]
+    if(!conversation) convMap[m.conversationId] = {id:m.conversationId, name: m.conversationId, type:'unknown', lastMessage: m, lastTimestamp: m.timestamp}
+    else if(conversation.lastTimestamp == null || m.timestamp > conversation.lastTimestamp){
+      conversation.lastMessage = m
+      conversation.lastTimestamp = m.timestamp
     }
   }
   conversations = Object.values(convMap)
@@ -67,5 +68,11 @@ export function parseSqliteToModel(db:any): {conversations: any[], messages:any[
 }
 
 function cryptoRandomId(){
-  return Math.random().toString(36).slice(2,12)
+  return crypto.randomUUID()
+}
+
+function normalizeTimestamp(value: unknown): number {
+  const timestamp = Number(value)
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return Date.now()
+  return timestamp < 10_000_000_000 ? timestamp * 1000 : timestamp
 }
