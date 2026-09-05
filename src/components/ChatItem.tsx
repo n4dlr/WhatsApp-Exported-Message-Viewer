@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Conversation } from '../types/conversation'
 import { useChatStore } from '../stores/chatStore'
 import {
@@ -15,12 +15,40 @@ import {
   Mic,
   Video,
   FileText,
-  Smile
+  Smile,
+  ChevronDown,
+  Trash2,
+  CheckCircle2,
+  Circle
 } from 'lucide-react'
 
 export default function ChatItem({ conversation }: { conversation: Conversation }) {
-  const { activeConversationId, selectConversation, customContacts, isArchivedView } = useChatStore()
+  const {
+    activeConversationId,
+    selectConversation,
+    customContacts,
+    isArchivedView,
+    setChatToDelete,
+    markAsRead,
+    markAsUnread
+  } = useChatStore()
+
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+
   const isSelected = conversation.id === activeConversationId
+
+  // Close context menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    window.addEventListener('click', handleClickOutside)
+    return () => window.removeEventListener('click', handleClickOutside)
+  }, [menuOpen])
 
   // Custom contact name override or database contact name
   const customName = conversation.phoneNumber ? customContacts[conversation.phoneNumber] : null
@@ -57,10 +85,24 @@ export default function ChatItem({ conversation }: { conversation: Conversation 
     return null
   }
 
+  const handleSelect = (e: React.MouseEvent) => {
+    // If clicking menu, don't trigger chat select
+    if ((e.target as HTMLElement).closest('.chat-item-menu-btn') || (e.target as HTMLElement).closest('.chat-item-menu-dropdown')) {
+      return
+    }
+    void selectConversation(conversation.id)
+  }
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setMenuOpen(true)
+  }
+
   return (
-    <button
-      type="button"
-      onClick={() => void selectConversation(conversation.id)}
+    <div
+      onClick={handleSelect}
+      onContextMenu={handleContextMenu}
       className={`w-full text-left px-3.5 py-3 flex items-center gap-3 transition-colors border-b cursor-pointer select-none relative group ${
         isSelected
           ? 'bg-[#2a3942]'
@@ -103,7 +145,7 @@ export default function ChatItem({ conversation }: { conversation: Conversation 
         </div>
 
         <div className="flex justify-between items-center text-[13.5px] text-[var(--wa-text-secondary)]">
-          <div className="flex items-center gap-1 truncate max-w-[82%]">
+          <div className="flex items-center gap-1 truncate max-w-[75%]">
             {lastMsg?.fromMe && (
               <span className="flex-shrink-0">
                 {lastMsg.status === 13 ? (
@@ -125,14 +167,81 @@ export default function ChatItem({ conversation }: { conversation: Conversation 
             {conversation.archived && !isArchivedView && (
               <Archive size={14} className="text-[var(--wa-text-secondary)] opacity-70" />
             )}
+
             {conversation.unreadCount != null && conversation.unreadCount > 0 && (
               <span className="bg-[var(--wa-green)] text-[#111b21] font-bold text-[11px] min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center shadow-sm">
                 {conversation.unreadCount > 999 ? '999+' : conversation.unreadCount}
               </span>
             )}
+
+            {/* Hover Action Chevron (WhatsApp Web style dropdown trigger) */}
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation()
+                setMenuOpen(!menuOpen)
+              }}
+              className="chat-item-menu-btn opacity-0 group-hover:opacity-100 p-1 text-[var(--wa-text-secondary)] hover:text-[var(--wa-text-primary)] transition-opacity rounded-full hover:bg-[var(--wa-hover)]"
+              title="Söhbət seçimləri"
+            >
+              <ChevronDown size={17} />
+            </button>
           </div>
         </div>
       </div>
-    </button>
+
+      {/* Dropdown Menu */}
+      {menuOpen && (
+        <div
+          ref={menuRef}
+          onClick={e => e.stopPropagation()}
+          className="chat-item-menu-dropdown absolute right-4 top-10 w-52 py-2 rounded-xl shadow-2xl z-40 text-sm animate-fade-in border select-none"
+          style={{
+            backgroundColor: 'var(--wa-header-bg)',
+            borderColor: 'var(--wa-border)'
+          }}
+        >
+          {conversation.unreadCount && conversation.unreadCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => {
+                markAsRead(conversation.id)
+                setMenuOpen(false)
+              }}
+              className="w-full text-left px-4 py-2 hover:bg-[var(--wa-hover)] flex items-center gap-2.5 text-[var(--wa-text-primary)] cursor-pointer"
+            >
+              <CheckCircle2 size={16} className="text-[var(--wa-blue-check)]" />
+              <span>Oxunmuş kimi işarələ</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                markAsUnread(conversation.id)
+                setMenuOpen(false)
+              }}
+              className="w-full text-left px-4 py-2 hover:bg-[var(--wa-hover)] flex items-center gap-2.5 text-[var(--wa-text-primary)] cursor-pointer"
+            >
+              <Circle size={16} className="text-[var(--wa-green)] fill-[var(--wa-green)]" />
+              <span>Oxunmamış kimi işarələ</span>
+            </button>
+          )}
+
+          <div className="h-px my-1 bg-[var(--wa-border)]" />
+
+          <button
+            type="button"
+            onClick={() => {
+              setChatToDelete(conversation)
+              setMenuOpen(false)
+            }}
+            className="w-full text-left px-4 py-2 hover:bg-[var(--wa-hover)] flex items-center gap-2.5 text-[#ef5350] cursor-pointer"
+          >
+            <Trash2 size={16} />
+            <span>Söhbəti Sil</span>
+          </button>
+        </div>
+      )}
+    </div>
   )
 }

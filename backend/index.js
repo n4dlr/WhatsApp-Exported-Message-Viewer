@@ -360,7 +360,7 @@ app.get('/api/session/:sessionId/chats', (req, res) => {
   if (!session) return res.status(404).send('Sessiya tapılmadı.')
 
   try {
-    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200)
+    const limit = Math.min(Math.max(Number(req.query.limit) || 1000, 1), 5000)
     const offset = Math.max(Number(req.query.offset) || 0, 0)
     const search = String(req.query.search || '').trim().toLowerCase()
     const filter = String(req.query.filter || 'all').toLowerCase() // 'all' | 'unread' | 'groups' | 'archived'

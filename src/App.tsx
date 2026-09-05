@@ -6,6 +6,7 @@ import MessageInspectorDrawer from './components/MessageInspectorDrawer'
 import TableExplorerModal from './components/TableExplorerModal'
 import ChatDetailsDrawer from './components/ChatDetailsDrawer'
 import ContactEditModal from './components/ContactEditModal'
+import DeleteChatModal from './components/DeleteChatModal'
 import { useChatStore } from './stores/chatStore'
 
 export default function App() {
@@ -69,6 +70,7 @@ export default function App() {
       <TableExplorerModal />
       <ChatDetailsDrawer />
       <ContactEditModal />
+      <DeleteChatModal />
     </div>
   )
 }
